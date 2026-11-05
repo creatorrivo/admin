@@ -1,0 +1,2939 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Creator Rivo | Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF3F0; --coral:#0E6E4F; --coral-dark:#0A4F38;
+    --text:#14181B; --muted:#667085; --line:#E3E8E6; --ok:#16A34A; --danger:#DC2626; --danger-bg:#FEF2F2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  html,body{overflow-x:hidden; width:100%;}
+  body{background:var(--bg); color:var(--text); font-family:'Manrope',sans-serif;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:800; letter-spacing:-0.01em;}
+  button{font-family:inherit; cursor:pointer; touch-action:manipulation;}
+  input,textarea,select{font-family:inherit; touch-action:manipulation;}
+  img{max-width:100%;}
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{
+    min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center;
+    padding:20px; padding-top:max(20px, env(safe-area-inset-top)); padding-bottom:max(20px, env(safe-area-inset-bottom));
+  }
+  .login-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:40px 32px;
+    max-width:380px; width:100%; box-shadow:0 14px 34px rgba(28,27,41,0.1); text-align:center;
+  }
+  .login-card .logo{font-size:1.5rem; margin-bottom:6px;}
+  .login-card .logo span{color:var(--coral);}
+  .login-card p{color:var(--muted); font-size:0.9rem; margin-bottom:24px;}
+  .field{margin-bottom:14px; text-align:left;}
+  .field label{display:block; font-weight:700; font-size:0.82rem; margin-bottom:6px;}
+  .field input, .field textarea, .field select{
+    width:100%; padding:11px 13px; border-radius:10px; border:1.5px solid var(--line);
+    font-size:16px; background:#fff; color:var(--text); min-height:44px;
+  }
+  .field textarea{min-height:0;}
+  .field input:focus, .field textarea:focus, .field select:focus{outline:none; border-color:var(--coral);}
+  .btn{
+    background:var(--coral); color:#fff; font-weight:800; padding:12px 20px; border-radius:10px;
+    border:none; font-size:0.95rem; width:100%; min-height:46px;
+  }
+  .btn:hover{background:var(--coral-dark);}
+  .btn:active{background:var(--coral-dark); transform:scale(0.98);}
+  .btn-ghost{
+    background:#fff; color:var(--text); border:1.5px solid var(--line); font-weight:700;
+    padding:10px 16px; border-radius:10px; font-size:0.88rem; min-height:40px;
+  }
+  .btn-ghost:active{background:var(--bg);}
+  .msg{margin-top:14px; font-weight:700; font-size:0.85rem; min-height:1.2em;}
+  .msg.err{color:var(--coral);}
+  .msg.ok{color:var(--ok);}
+
+  /* ---------- Admin shell ---------- */
+  #adminShell{display:none; min-height:100vh; grid-template-columns:252px 1fr;}
+  #adminShell.active{display:grid;}
+  aside{
+    background:#fff; border-right:1px solid var(--line); padding:26px 16px; display:flex;
+    flex-direction:column; gap:4px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  aside .logo{font-size:1.35rem; margin-bottom:4px; padding:0 8px;}
+  aside .logo span{color:var(--coral);}
+  .sidebar-tagline{font-size:0.72rem; font-weight:700; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; padding:0 8px; margin-bottom:20px;}
+  .nav-group-label{
+    font-size:0.68rem; font-weight:800; color:var(--muted); letter-spacing:0.07em; text-transform:uppercase;
+    padding:16px 12px 6px; opacity:0.75;
+  }
+  .nav-group-label:first-of-type{padding-top:4px;}
+  .nav-item{
+    position:relative; display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:11px;
+    color:var(--muted); font-weight:700; font-size:0.92rem; border:none; background:none; text-align:left; width:100%;
+    transition:background .15s ease, color .15s ease;
+  }
+  .nav-item:hover{background:var(--bg); color:var(--text);}
+  .nav-item.active{background:linear-gradient(135deg,#EAF6F0,#DCEEE5); color:var(--coral); box-shadow:inset 0 0 0 1px rgba(14,110,79,0.16);}
+  .nav-item svg{flex:0 0 auto;}
+  .ticket-nav-badge{
+    margin-left:auto; background:var(--coral); color:#fff; font-size:0.72rem; font-weight:800;
+    min-width:20px; height:20px; border-radius:100px; display:flex; align-items:center; justify-content:center; padding:0 6px;
+    box-shadow:0 2px 6px rgba(14,110,79,0.4);
+  }
+  .sidebar-foot{margin-top:auto; border-top:1px solid var(--line); padding-top:14px;}
+  .sidebar-foot .email{font-size:0.78rem; color:var(--muted); padding:0 8px 10px; word-break:break-all;}
+
+  /* ---------- Mobile top bar + hamburger drawer ---------- */
+  .mobile-topbar{display:none;}
+  .hamburger-btn{
+    width:40px; height:40px; border-radius:11px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:var(--text);
+  }
+  .hamburger-btn:hover{border-color:var(--coral); color:var(--coral);}
+  .drawer-close-btn{
+    width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; color:var(--muted); margin-left:auto;
+  }
+  .drawer-head{display:flex; align-items:center; gap:10px; padding:0 8px 18px; margin-bottom:6px; border-bottom:1px solid var(--line);}
+  .drawer-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(15,14,26,0.5); backdrop-filter:blur(1px);
+    z-index:55; opacity:0; transition:opacity .25s ease;
+  }
+  .drawer-backdrop.open{display:block; opacity:1;}
+  @media(min-width:801px){ .drawer-close-btn{display:none;} }
+
+  .ticket-admin-card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:14px;}
+  .stats-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  .stat-card{
+    position:relative; background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:18px; display:flex; flex-direction:column; gap:8px; overflow:hidden;
+    transition:transform .2s ease, box-shadow .2s ease;
+    opacity:0; transform:translateY(14px);
+    animation:statCardIn .5s ease forwards;
+  }
+  .stat-card::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent, var(--coral));
+  }
+  .stat-card:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(28,27,41,0.08);}
+  .stat-card .stat-icon{
+    width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:1rem; background:color-mix(in srgb, var(--accent, var(--coral)) 14%, transparent);
+  }
+  .stat-card .stat-label{color:var(--muted); font-size:0.8rem; font-weight:700;}
+  .stat-card strong{font-size:1.6rem; font-weight:800;}
+  @keyframes statCardIn{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .stat-card:nth-child(1){animation-delay:.02s;}
+  .stat-card:nth-child(2){animation-delay:.06s;}
+  .stat-card:nth-child(3){animation-delay:.10s;}
+  .stat-card:nth-child(4){animation-delay:.14s;}
+  .stat-card:nth-child(5){animation-delay:.18s;}
+  .stat-card:nth-child(6){animation-delay:.22s;}
+  .stat-card:nth-child(7){animation-delay:.26s;}
+  .stat-card:nth-child(8){animation-delay:.30s;}
+  @media(max-width:900px){ .stats-grid{grid-template-columns:repeat(2,1fr);} }
+
+  /* ---------- Analytics charts ---------- */
+  .charts-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:18px; margin-top:22px;}
+  @media(max-width:900px){ .charts-grid{grid-template-columns:1fr;} }
+  .chart-card{
+    background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px;
+    opacity:0; transform:translateY(14px); animation:statCardIn .5s ease forwards; animation-delay:.34s;
+  }
+  .chart-card h3{font-size:0.98rem; margin-bottom:18px;}
+  .bar-chart{display:flex; align-items:flex-end; gap:5px; height:180px; padding-top:20px;}
+  .bar-col{flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%;}
+  .bar-col .bar-track{flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center;}
+  .bar{
+    width:70%; max-width:22px; border-radius:6px 6px 2px 2px; height:0;
+    background:linear-gradient(180deg, var(--coral), var(--coral-dark));
+    transition:height .9s cubic-bezier(.16,1,.3,1);
+    position:relative; cursor:default;
+  }
+  .bar:hover{filter:brightness(1.08);}
+  .bar-label{font-size:0.58rem; color:var(--muted); white-space:nowrap;}
+  .donut-chart-wrap{display:flex; flex-direction:column; align-items:center; gap:18px;}
+  .donut-chart-wrap svg circle{transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1);}
+  .donut-center-label{font-size:0.72rem; color:var(--muted); text-anchor:middle;}
+  .donut-center-value{font-family:'Fraunces',serif; font-weight:700; text-anchor:middle;}
+  .donut-legend{width:100%; display:flex; flex-direction:column; gap:9px;}
+  .legend-row{display:flex; align-items:center; gap:9px; font-size:0.85rem;}
+  .legend-dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto;}
+  .legend-row span.legend-name{flex:1;}
+  .legend-row span.legend-count{font-weight:800;}
+  .chart-empty{color:var(--muted); font-size:0.85rem; text-align:center; padding:24px 0;}
+
+  .ticket-admin-card .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;}
+  .ticket-admin-card .meta{color:var(--muted); font-size:0.8rem; margin-top:4px;}
+  .ticket-admin-card textarea{
+    width:100%; margin-top:12px; padding:10px 12px; border-radius:8px; border:1.5px solid var(--line);
+    font-family:inherit; font-size:0.9rem; resize:vertical;
+  }
+  .ticket-admin-card .actions{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;}
+  .ticket-admin-card select{padding:8px 10px; border-radius:8px; border:1.5px solid var(--line); font-family:inherit; font-size:0.85rem;}
+  .status-pill{font-size:0.72rem; font-weight:800; color:#fff; padding:3px 10px; border-radius:100px; white-space:nowrap;}
+
+  main{padding:32px 36px; max-width:1100px;}
+  .page-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;}
+  .page-head h2{font-size:1.5rem;}
+  .add-btn{
+    background:var(--coral); color:#fff; font-weight:800; padding:11px 20px; border-radius:10px; border:none; font-size:0.9rem;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden;}
+  thead th{
+    text-align:left; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted);
+    padding:14px 16px; border-bottom:1px solid var(--line); background:var(--bg);
+  }
+  tbody td{padding:14px 16px; border-bottom:1px solid var(--line); font-size:0.92rem; vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  .row-actions{display:flex; gap:8px; white-space:nowrap;}
+  .icon-btn{
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; color:var(--text);
+  }
+  .icon-btn:hover{border-color:var(--coral); color:var(--coral);}
+  .empty-row td{color:var(--muted); text-align:center; padding:36px 16px;}
+
+  /* Modal form */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(28,27,41,0.45); z-index:100;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff; border-radius:18px; padding:28px; width:100%; max-width:440px;
+    max-height:88vh; overflow-y:auto;
+  }
+  .modal h3{font-size:1.2rem; margin-bottom:18px;}
+  .modal-actions{display:flex; gap:10px; margin-top:6px;}
+  .modal-actions .btn{flex:1;}
+  .modal-actions .btn-ghost{flex:1; text-align:center;}
+
+  /* Action result popup (approve/reject confirmations) */
+  .action-result-modal{max-width:340px; text-align:center; padding:30px 26px 26px;}
+  .action-result-icon{
+    width:62px; height:62px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    margin:0 auto 16px; background:#E6F9EE; color:var(--ok);
+  }
+  .action-result-icon.fail{background:var(--danger-bg); color:var(--danger);}
+  .action-result-modal h3{margin-bottom:8px;}
+  .action-result-modal p{color:var(--muted); font-size:0.88rem; line-height:1.6; margin-bottom:20px;}
+
+  /* Buttons with an inline loading spinner */
+  .btn.loading, .btn-ghost.loading{display:flex; align-items:center; justify-content:center; gap:9px; opacity:0.8; cursor:not-allowed;}
+  .btn-inline-spinner{
+    width:16px; height:16px; border-radius:50%; flex:0 0 auto;
+    border:2.5px solid rgba(255,255,255,0.4); border-top-color:#fff;
+    animation:btn-spin 0.7s linear infinite;
+  }
+  .btn-ghost .btn-inline-spinner{border-color:rgba(14,110,79,0.25); border-top-color:var(--coral);}
+  .reject-dep-btn .btn-inline-spinner{border-color:rgba(220,38,38,0.25); border-top-color:var(--danger);}
+  .approve-dep-btn .btn-inline-spinner{border-color:rgba(22,163,74,0.25); border-top-color:var(--ok);}
+  @keyframes btn-spin{ to{ transform:rotate(360deg); } }
+
+  .toast{
+    position:fixed; bottom:24px; right:24px; background:var(--text); color:#fff; padding:13px 20px;
+    border-radius:10px; font-size:0.9rem; font-weight:600; z-index:200; opacity:0; transform:translateY(10px);
+    transition:.25s; pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+
+  @media(max-width:800px){
+    #adminShell.active{display:block;}
+    .mobile-topbar{
+      display:flex; align-items:center; gap:12px; background:#fff; border-bottom:1px solid var(--line);
+      padding:13px 16px; padding-top:max(13px, env(safe-area-inset-top));
+      position:sticky; top:0; z-index:30; box-shadow:0 2px 10px rgba(28,27,41,0.04);
+    }
+    .mobile-topbar .page-title{font-size:1.05rem; font-weight:800; font-family:'Fraunces',serif; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .hamburger-btn{width:44px; height:44px;}
+    aside{
+      position:fixed; top:0; left:0; height:100vh; height:100dvh; width:280px; max-width:84vw; z-index:60;
+      transform:translateX(-100%); transition:transform .3s cubic-bezier(.16,1,.3,1);
+      box-shadow:none; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding:calc(18px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
+    }
+    aside.open{transform:translateX(0); box-shadow:24px 0 60px rgba(15,14,26,0.28);}
+    aside .logo{display:block; font-size:1.2rem;}
+    .sidebar-foot{display:block;}
+    .nav-item{white-space:normal; width:100%; padding:13px 12px; font-size:0.95rem;}
+    main{padding:18px 14px 40px;}
+    .page-head{margin-bottom:18px;}
+    .page-head h2{font-size:1.25rem;}
+    .page-head .add-btn{width:100%; justify-content:center;}
+
+    /* Buttons: comfortable tap size */
+    .icon-btn{width:38px; height:38px;}
+    .row-actions{white-space:normal; flex-wrap:wrap;}
+
+    /* Tables become stacked cards — no more squinting at a scrolled-off row */
+    table{border:none; background:none; border-radius:0;}
+    thead{display:none;}
+    tbody{display:block;}
+    tbody tr{
+      display:block; background:#fff; border:1px solid var(--line); border-radius:14px;
+      margin-bottom:12px; overflow:hidden;
+    }
+    tbody tr.empty-row{background:transparent; border:none; margin-bottom:0;}
+    tbody td{
+      display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+      padding:11px 14px; border-bottom:1px solid var(--line); font-size:0.92rem; text-align:left;
+    }
+    tbody td:last-child{border-bottom:none;}
+    tbody td[data-label]::before{
+      content:attr(data-label); font-weight:800; color:var(--muted); font-size:0.68rem;
+      text-transform:uppercase; letter-spacing:.05em;
+    }
+    tbody td.cell-actions{
+      flex-direction:row; justify-content:flex-end; background:var(--bg);
+    }
+    tbody td.cell-actions .row-actions{width:100%; justify-content:flex-end;}
+    tbody tr.empty-row td{display:block; text-align:center; padding:30px 16px;}
+
+    /* Toolbars stack full-width for easy tapping */
+    .vp-toolbar{flex-direction:column; align-items:stretch;}
+    .vp-toolbar select, .vp-toolbar input{width:100%; min-height:44px; font-size:16px;}
+    #userSearchInput{max-width:none !important; min-height:44px;}
+    .ticket-admin-card .actions{flex-direction:column; align-items:stretch;}
+    .ticket-admin-card .actions select, .ticket-admin-card .actions button{width:100%; min-height:44px;}
+    .ticket-admin-card select{padding:11px 12px; font-size:16px;}
+
+    .toast{
+      left:16px; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); text-align:center;
+    }
+    .vp-row{gap:8px; flex-wrap:wrap;}
+    .vp-title{white-space:normal;}
+    .vp-sub{white-space:normal;}
+
+    /* Modal becomes a bottom sheet — easier to reach one-handed */
+    .overlay{align-items:flex-end; padding:0;}
+    .modal{
+      max-width:100%; width:100%; border-radius:20px 20px 0 0; max-height:calc(92dvh - env(safe-area-inset-top));
+      padding:22px 18px calc(18px + env(safe-area-inset-bottom));
+    }
+    .vp-modal{padding-left:16px; padding-right:16px;}
+    #actionResultOverlay{align-items:center; padding:20px;}
+    #actionResultOverlay .modal{border-radius:18px; max-height:88dvh;}
+    .modal-actions{position:sticky; bottom:0; background:#fff; padding-top:10px; margin-top:10px;}
+  }
+
+  @media(max-width:480px){
+    .stats-grid{grid-template-columns:1fr 1fr; gap:10px;}
+    .stat-card{padding:14px;}
+    .stat-card strong{font-size:1.35rem;}
+    .vp-stats{grid-template-columns:repeat(3,1fr); gap:8px;}
+    .vp-stat{padding:9px;}
+    .vp-stat strong{font-size:1.1rem;}
+    .login-card{padding:30px 22px;}
+  }
+
+  /* Video stock manager */
+  .vp-modal{max-width:760px;}
+  .vp-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;}
+  .vp-head h3{margin:0; font-size:1.1rem;}
+  .vp-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;}
+  .vp-stat{background:var(--bg); border-radius:12px; padding:12px; text-align:center;}
+  .vp-stat strong{display:block; font-size:1.35rem;}
+  .vp-stat span{font-size:0.75rem; color:var(--muted); font-weight:700;}
+  .vp-box{border:1.5px solid var(--line); border-radius:14px; padding:14px; margin-bottom:16px;}
+  .vp-box h4{font-size:0.92rem; margin-bottom:8px;}
+  .vp-warn{background:#FFF8E6; border:1.5px solid #F5D98B; border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:0.85rem; line-height:1.6;}
+  .vp-dupes{margin-top:8px; font-size:0.78rem; max-height:150px; overflow:auto; background:var(--bg); border-radius:10px; padding:8px 10px; color:var(--muted);}
+  .vp-toolbar{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .vp-toolbar select, .vp-toolbar input{padding:9px 12px; border-radius:10px; border:1.5px solid var(--line); font-size:0.88rem; background:#fff; color:var(--text);}
+  .vp-toolbar input{flex:1; min-width:140px;}
+  .vp-row{display:flex; align-items:center; gap:10px; padding:10px 2px; border-bottom:1px solid var(--line); font-size:0.86rem;}
+  .vp-row:last-child{border-bottom:none;}
+  .vp-num{color:var(--muted); font-weight:700; min-width:30px; font-size:0.76rem;}
+  .vp-main{flex:1; min-width:0;}
+  .vp-title{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .vp-sub{color:var(--muted); font-size:0.76rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .vp-sub a{color:var(--coral); font-weight:700;}
+  .btn-ghost.small{padding:6px 12px; font-size:0.8rem; height:32px;}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="logo">Creator <span>Rivo</span></div>
+    <p>Log in to access the admin panel</p>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input type="email" id="adminEmail" required autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="adminPass" required autocomplete="current-password"></div>
+      <button type="submit" class="btn">Log In</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= ADMIN SHELL ================= -->
+<div id="adminShell">
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <div class="mobile-topbar">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <span class="page-title" id="mobilePageTitle">Analytics</span>
+  </div>
+
+  <aside id="adminSidebar">
+    <div class="drawer-head">
+      <div class="logo">Creator <span>Rivo</span></div>
+      <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-tagline">Admin Panel</div>
+    <button class="nav-item active" data-section="analytics" data-title="Analytics">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+      Analytics
+    </button>
+    <div class="nav-group-label">Catalog</div>
+    <button class="nav-item" data-section="categories" data-title="Category">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Category
+    </button>
+    <button class="nav-item" data-section="courses" data-title="Courses">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5 12 5l10 4.5-10 4.5-10-4.5Z"/><path d="M6 11.5V17c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5.5"/></svg>
+      Courses
+    </button>
+    <button class="nav-item" data-section="products" data-title="Products">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12.5a1 1 0 0 1-1 1.5H6a1 1 0 0 1-1-1.5L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      Products
+    </button>
+    <button class="nav-item" data-section="games" data-title="Games">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.2" cy="10.8" r="1" fill="currentColor" stroke="none"/><circle cx="17.8" cy="13.4" r="1" fill="currentColor" stroke="none"/></svg>
+      Games
+    </button>
+    <button class="nav-item" data-section="videopacks" data-title="Video Packs">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="14" height="14" rx="2"/><path d="M16.5 10 21 7v10l-4.5-3Z"/></svg>
+      Video Packs
+    </button>
+    <div class="nav-group-label">Live &amp; Sell</div>
+    <button class="nav-item" data-section="livestream" data-title="Live Stream">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M7.5 7.5a7 7 0 0 0 0 9M16.5 7.5a7 7 0 0 1 0 9M4.5 4.5a11 11 0 0 0 0 15M19.5 4.5a11 11 0 0 1 0 15"/></svg>
+      Live Stream
+      <span class="ticket-nav-badge" id="liveNavBadge" style="display:none; background:#DC2626;">LIVE</span>
+    </button>
+    <button class="nav-item" data-section="socialsell" data-title="YouTube &amp; FB Sell">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5V4.5a1 1 0 0 1 1-1h7l9.3 9.3a1.5 1.5 0 0 1 0 2.1l-5.4 5.4a1.5 1.5 0 0 1-2.1 0L3 11.5Z"/><circle cx="7.5" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg>
+      YouTube &amp; FB Sell
+    </button>
+    <div class="nav-group-label">Sales &amp; Transactions</div>
+    <button class="nav-item" data-section="orders" data-title="Order Management">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>
+      Orders
+      <span class="ticket-nav-badge" id="orderNavBadge" style="display:none;"></span>
+    </button>
+    <button class="nav-item" data-section="wallet" data-title="Wallet">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2M3 10h18"/></svg>
+      Wallet
+      <span class="ticket-nav-badge" id="walletNavBadge" style="display:none;"></span>
+    </button>
+    <div class="nav-group-label">Engagement</div>
+    <button class="nav-item" data-section="testimonials" data-title="Reviews">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 20l.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+      Reviews
+    </button>
+    <button class="nav-item" data-section="notices" data-title="Notices">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10.5 21a1.7 1.7 0 0 0 3 0"/></svg>
+      Notices
+    </button>
+    <button class="nav-item" data-section="tickets" data-title="Support Tickets">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="2.5" y="13" width="5" height="6" rx="1.5"/><rect x="16.5" y="13" width="5" height="6" rx="1.5"/><path d="M20 19v1a2 2 0 0 1-2 2h-3"/></svg>
+      Support Tickets
+      <span class="ticket-nav-badge" id="ticketNavBadge" style="display:none;"></span>
+    </button>
+    <div class="nav-group-label">System</div>
+    <button class="nav-item" data-section="users" data-title="Users">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Users
+    </button>
+    <button class="nav-item" data-section="settings" data-title="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      Settings
+    </button>
+    <div class="sidebar-foot">
+      <div class="email" id="adminEmailLabel"></div>
+      <button class="btn-ghost" id="logoutBtn" style="width:100%;">Log Out</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Analytics -->
+    <section class="admin-section" data-section="analytics">
+      <div class="page-head">
+        <h2>Analytics Dashboard</h2>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card" style="--accent:#2563EB;"><span class="stat-icon">👥</span><span class="stat-label">Total Users</span><strong id="statUsers" data-target="0">0</strong></div>
+        <div class="stat-card" style="--accent:#8730D6;"><span class="stat-icon">🛒</span><span class="stat-label">Total Orders</span><strong id="statOrders" data-target="0">0</strong></div>
+        <div class="stat-card" style="--accent:#16A34A;"><span class="stat-icon">Tk</span><span class="stat-label">Total Revenue (Completed Orders)</span><strong id="statRevenue" data-target="0">Tk0</strong></div>
+        <div class="stat-card" style="--accent:#F59E0B;"><span class="stat-icon">⏳</span><span class="stat-label">Pending Orders</span><strong id="statPendingOrders" data-target="0">0</strong></div>
+        <div class="stat-card" style="--accent:#DC2626;"><span class="stat-icon">🎫</span><span class="stat-label">Open Support Tickets</span><strong id="statOpenTickets" data-target="0">0</strong></div>
+        <div class="stat-card" style="--accent:#E2136E;"><span class="stat-icon">💳</span><span class="stat-label">Pending Deposits</span><strong id="statPendingDeposits" data-target="0">0</strong></div>
+        <div class="stat-card" style="--accent:#0EA5E9;"><span class="stat-icon">🎓</span><span class="stat-label">Total Courses</span><strong id="statCourses" data-target="0">0</strong></div>
+        <div class="stat-card" style="--accent:#7C3AED;"><span class="stat-icon">📦</span><span class="stat-label">Total Products</span><strong id="statProducts" data-target="0">0</strong></div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Revenue (Last 14 Days)</h3>
+          <div id="revenueChart" class="bar-chart"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Order Status</h3>
+          <div id="statusChart" class="donut-chart-wrap"></div>
+        </div>
+      </div>
+
+      <button class="add-btn" id="refreshStatsBtn" style="margin-top:20px;">Refresh</button>
+    </section>
+
+    <!-- Categories -->
+    <section class="admin-section" data-section="categories" style="display:none;">
+      <div class="page-head">
+        <h2>Category Management</h2>
+        <button class="add-btn" data-add="categories">+ New Category</button>
+      </div>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:520px; margin:-14px 0 20px;">
+        Categories added here will show as suggestions in the course form's category field.
+      </p>
+      <table>
+        <thead><tr><th>Category Name</th><th></th></tr></thead>
+        <tbody id="tbody-categories"><tr class="empty-row"><td colspan="2">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Courses -->
+    <section class="admin-section" data-section="courses" style="display:none;">
+      <div class="page-head">
+        <h2>Course Management</h2>
+        <button class="add-btn" data-add="courses">+ New Course</button>
+      </div>
+      <table>
+        <thead><tr><th>Title</th><th>Category</th><th>Price</th><th>Old Price</th><th>Discount</th><th></th></tr></thead>
+        <tbody id="tbody-courses"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Products -->
+    <section class="admin-section" data-section="products" style="display:none;">
+      <div class="page-head">
+        <h2>Product Management</h2>
+        <button class="add-btn" data-add="products">+ New Product</button>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Price</th><th>Old Price</th><th>Type</th><th>Stock</th><th></th></tr></thead>
+        <tbody id="tbody-products"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Games -->
+    <section class="admin-section" data-section="games" style="display:none;">
+      <div class="page-head">
+        <h2>Games Management</h2>
+        <button class="add-btn" data-add="games">+ New Game</button>
+      </div>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:560px; margin:-8px 0 16px;">
+        Paste the game's complete HTML code directly (no link needed) — once a user buys it, they can play the game for the chosen plan's duration; after it expires they need to buy again.
+      </p>
+
+      <div style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; max-width:640px; margin-bottom:22px;">
+        <h3 style="margin:0 0 4px; font-size:1rem;">Customize Subscription Plans</h3>
+        <p style="color:var(--muted); font-size:0.82rem; margin:0 0 14px;">
+          Add, remove, or edit as many plans/durations as you like here (name and duration are not hardcoded — fully customizable). When you add or edit a game below, a price field for each of these plans will show automatically.
+        </p>
+        <div id="gameTierRows"></div>
+        <button type="button" class="btn-ghost" id="addGameTierBtn" style="margin-top:6px;">+ Add New Plan</button>
+        <div style="margin-top:14px; display:flex; align-items:center; gap:12px;">
+          <button type="button" class="btn" id="saveGameTiersBtn">Save Plans</button>
+          <span class="msg" id="gameTiersMsg" style="margin:0;"></span>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr><th>Name</th><th>Starting Price</th><th>Plan Count</th><th></th></tr></thead>
+        <tbody id="tbody-games"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Video Packs -->
+    <section class="admin-section" data-section="videopacks" style="display:none;">
+      <div class="page-head">
+        <h2>Video Pack Management</h2>
+        <button class="add-btn" data-add="videopacks">+ New Video Pack</button>
+      </div>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:560px; margin:-8px 0 16px;">
+        Create the pack, then add Google Drive links from the "Manage Videos" button. Each link is kept as a separate record — the same link can't be added twice, and a link once sold is never given to anyone else. 1/5/10 — the user gets however many remaining links they buy.
+      </p>
+      <table>
+        <thead><tr><th>Name</th><th>1x</th><th>5x</th><th>10x</th><th>Stock</th><th></th></tr></thead>
+        <tbody id="tbody-videopacks"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Orders -->
+    <!-- Live Stream -->
+    <section class="admin-section" data-section="livestream" style="display:none;">
+      <div class="page-head"><h2>Live Stream (24/7 Loop)</h2></div>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:560px; margin:-8px 0 16px;">
+        Upload one video and paste your YouTube stream key. The video then loops non-stop as a YouTube live stream until you press Stop.
+        The streaming itself runs on your <strong>live-worker</strong> server (see the README) — this page just controls it.
+      </p>
+
+      <div style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; max-width:560px; margin-bottom:18px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <strong>Status:</strong>
+          <span id="liveStatusPill" style="font-weight:800; font-size:0.78rem; padding:4px 10px; border-radius:100px; background:#e8ecea; color:#667085;">OFFLINE</span>
+          <span id="liveStatusMsg" style="color:var(--muted); font-size:0.82rem;"></span>
+        </div>
+        <div id="liveWorkerWarn" style="display:none; margin-top:10px; font-size:0.82rem; font-weight:700; color:#B45309;"></div>
+      </div>
+
+      <form id="liveForm" style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; max-width:560px;">
+        <div class="field">
+          <label>Stream Title (shown on the site)</label>
+          <input type="text" id="liveTitleInput" placeholder="e.g. Creator Rivo 24/7 Live">
+        </div>
+        <div class="field">
+          <label>Video to loop</label>
+          <input type="file" id="liveVideoFile" accept="video/mp4,video/quicktime,video/x-matroska,video/webm">
+          <div id="liveCurrentVideo" style="font-size:0.78rem; color:var(--muted); margin-top:6px; word-break:break-all;"></div>
+          <progress id="liveUploadProg" value="0" max="100" style="width:100%; margin-top:8px; display:none;"></progress>
+        </div>
+        <div class="field">
+          <label>YouTube Stream Key</label>
+          <div style="display:flex; gap:8px;">
+            <input type="password" id="liveKeyInput" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx" autocomplete="off" style="flex:1;">
+            <button type="button" class="btn-ghost" id="liveKeyToggle" style="width:auto;">Show</button>
+          </div>
+          <div style="font-size:0.76rem; color:var(--muted); margin-top:6px;">YouTube Studio → Go Live → Stream → Stream key. Stored privately (admin-only).</div>
+        </div>
+        <details style="margin-bottom:14px;">
+          <summary style="font-weight:700; font-size:0.85rem; cursor:pointer;">Optional: show the live on this website</summary>
+          <div class="field" style="margin-top:10px;">
+            <label>YouTube live video link / ID</label>
+            <input type="text" id="liveWatchInput" placeholder="https://www.youtube.com/watch?v=... or the video ID">
+          </div>
+          <div class="field">
+            <label>— or — YouTube Channel ID (starts with UC...)</label>
+            <input type="text" id="liveChannelInput" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <p style="font-size:0.76rem; color:var(--muted);">If both are empty, the site only shows the LIVE badge. Channel ID always embeds whatever is live on that channel now.</p>
+        </details>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn" id="liveStartBtn" style="flex:1; min-width:140px;">Save &amp; Start Live</button>
+          <button type="button" class="btn-ghost" id="liveStopBtn" style="flex:1; min-width:120px; color:var(--danger); border-color:#f3c0c0;">Stop Live</button>
+        </div>
+        <div class="msg" id="liveFormMsg"></div>
+      </form>
+    </section>
+
+    <!-- YouTube & Facebook Sell -->
+    <section class="admin-section" data-section="socialsell" style="display:none;">
+      <div class="page-head"><h2>YouTube &amp; Facebook Sell</h2></div>
+      <form id="sellForm" style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; max-width:560px; margin-bottom:22px;">
+        <div class="field"><label>Platform</label>
+          <select id="sellPlatform"><option value="youtube">YouTube</option><option value="facebook">Facebook</option></select></div>
+        <div class="field"><label>Title</label><input type="text" id="sellTitle" required placeholder="e.g. Gaming channel — monetized"></div>
+        <div class="field"><label>Followers / Subscribers</label><input type="text" id="sellFollowers" placeholder="e.g. 25K"></div>
+        <div class="field"><label>Price (Tk)</label><input type="number" id="sellPrice" min="0" required></div>
+        <div class="field"><label>Description</label><textarea id="sellDesc" rows="3" style="width:100%; padding:11px 13px; border-radius:10px; border:1.5px solid var(--line); font-family:inherit; font-size:16px;"></textarea></div>
+        <button type="submit" class="btn">Add Listing</button>
+        <div class="msg" id="sellMsg"></div>
+      </form>
+      <table>
+        <thead><tr><th>Platform</th><th>Title</th><th>Price</th><th>Status</th><th></th></tr></thead>
+        <tbody id="tbody-sell"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="admin-section" data-section="orders" style="display:none;">
+      <div class="page-head">
+        <h2>Order Management</h2>
+      </div>
+      <div id="orderAdminList"><p style="color:var(--muted);">Loading...</p></div>
+    </section>
+
+    <!-- Wallet -->
+    <section class="admin-section" data-section="wallet" style="display:none;">
+      <div class="page-head">
+        <h2>Wallet — Deposit Requests</h2>
+      </div>
+      <div id="walletAdminList"><p style="color:var(--muted);">Loading...</p></div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="admin-section" data-section="testimonials" style="display:none;">
+      <div class="page-head">
+        <h2>Review Management</h2>
+        <button class="add-btn" data-add="testimonials">+ New Review</button>
+      </div>
+      <table>
+        <thead><tr><th>Review</th><th>Name</th><th>Location</th><th></th></tr></thead>
+        <tbody id="tbody-testimonials"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Notices -->
+    <section class="admin-section" data-section="notices" style="display:none;">
+      <div class="page-head">
+        <h2>Notice Management</h2>
+        <button class="add-btn" data-add="notices">+ New Notice</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Message</th><th>Video</th><th></th></tr></thead>
+        <tbody id="tbody-notices"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Support Tickets -->
+    <section class="admin-section" data-section="tickets" style="display:none;">
+      <div class="page-head">
+        <h2>Support Tickets</h2>
+      </div>
+      <div id="ticketAdminList"><p style="color:var(--muted);">Loading...</p></div>
+    </section>
+
+    <!-- Users -->
+    <section class="admin-section" data-section="users" style="display:none;">
+      <div class="page-head">
+        <h2>User Management</h2>
+      </div>
+      <input type="text" id="userSearchInput" placeholder="Search by name or email..."
+        style="width:100%; max-width:360px; padding:11px 14px; border-radius:10px; border:1.5px solid var(--line); font-family:inherit; font-size:16px; margin-bottom:16px;">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Wallet</th><th>Status / Role</th><th>Joined</th><th></th></tr></thead>
+        <tbody id="tbody-users"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Settings -->
+    <section class="admin-section" data-section="settings" style="display:none;">
+      <div class="page-head">
+        <h2>Website Content &amp; Settings</h2>
+      </div>
+      <form id="settingsForm" style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; max-width:480px;">
+        <div class="field">
+          <label>Homepage Promo Video — YouTube Video ID</label>
+          <input type="text" id="promoVideoIdInput" placeholder="e.g. dQw4w9WgXcQ">
+        </div>
+        <p style="color:var(--muted); font-size:0.82rem; margin:-6px 0 16px;">
+          If set, this video shows in the promo banner at the top of the homepage. Leave empty to show the default placeholder.
+        </p>
+        <div class="field">
+          <label>Homepage Notice Ticker (Scrolling Text)</label>
+          <input type="text" id="tickerTextInput" placeholder="e.g. WhatsApp us with any question — support team ready 24/7">
+        </div>
+        <p style="color:var(--muted); font-size:0.82rem; margin:-6px 0 16px;">
+          The scrolling notice text in the red banner at the top of the homepage. Leave empty to keep the default text.
+        </p>
+        <div class="field">
+          <label>"About Us" Page Text</label>
+          <textarea id="aboutTextInput" rows="4" placeholder="Creator Rivo is a video-first content and product platform..." style="width:100%; padding:11px 13px; border-radius:8px; border:1.5px solid var(--line); font-family:inherit; font-size:16px; resize:vertical;"></textarea>
+        </div>
+        <p style="color:var(--muted); font-size:0.82rem; margin:6px 0 16px;">
+          Leave empty to show the default text.
+        </p>
+        <button type="submit" class="btn">Save</button>
+        <div class="msg" id="settingsMsg"></div>
+      </form>
+
+      <h2 style="margin-top:36px;">Payment Method Numbers</h2>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:480px; margin:6px 0 16px;">
+        These numbers are shown on the site's checkout page — customers Send Money to this number via bKash/Nagad/Rocket and confirm the order with a transaction ID. Leave empty to show a "number not added yet" message at checkout.
+      </p>
+      <form id="paymentSettingsForm" style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; max-width:480px;">
+        <div class="field">
+          <label>bKash Number</label>
+          <input type="text" id="bkashNumberInput" placeholder="e.g. 01XXXXXXXXX (Personal/Merchant)">
+        </div>
+        <div class="field">
+          <label>Nagad Number</label>
+          <input type="text" id="nagadNumberInput" placeholder="e.g. 01XXXXXXXXX (Personal/Merchant)">
+        </div>
+        <div class="field">
+          <label>Rocket Number</label>
+          <input type="text" id="rocketNumberInput" placeholder="e.g. 01XXXXXXXXX-X">
+        </div>
+        <button type="submit" class="btn">Save Payment Numbers</button>
+        <div class="msg" id="paymentSettingsMsg"></div>
+      </form>
+
+      <h2 style="margin-top:36px;">Broadcast Notification</h2>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:480px; margin:6px 0 16px;">
+        This is an in-app banner — all users will see it at the top next time they open the app (dismissible). It's not a mobile OS-level push notification — that would need Firebase Cloud Messaging plus a backend/Cloud Function.
+      </p>
+      <form id="announcementForm" style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; max-width:480px;">
+        <div class="field">
+          <label>Title</label>
+          <input type="text" id="annTitle" placeholder="e.g. New course just launched!">
+        </div>
+        <div class="field">
+          <label>Message</label>
+          <textarea id="annMessage" rows="3" placeholder="Write the details..." style="width:100%; padding:11px 13px; border-radius:8px; border:1.5px solid var(--line); font-family:inherit; font-size:16px; resize:vertical;"></textarea>
+        </div>
+        <div class="field" style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="annActive" style="width:auto;">
+          <label style="margin:0;" for="annActive">Active (shown to users)</label>
+        </div>
+        <button type="submit" class="btn">Save Broadcast</button>
+        <div class="msg" id="announcementMsg"></div>
+      </form>
+      <h2 style="margin-top:36px;">Social Media Links</h2>
+      <p style="color:var(--muted); font-size:0.85rem; max-width:480px; margin:6px 0 16px;">
+        Set the links for the social icons shown in the site's footer here. Any field left empty means that icon won't be shown in the footer.
+      </p>
+      <form id="socialSettingsForm" style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; max-width:480px;">
+        <div class="field">
+          <label>Facebook Link</label>
+          <input type="url" id="socialFacebookInput" placeholder="https://facebook.com/yourpage">
+        </div>
+        <div class="field">
+          <label>YouTube Link</label>
+          <input type="url" id="socialYoutubeInput" placeholder="https://youtube.com/@yourchannel">
+        </div>
+        <div class="field">
+          <label>Instagram Link</label>
+          <input type="url" id="socialInstagramInput" placeholder="https://instagram.com/yourpage">
+        </div>
+        <div class="field">
+          <label>WhatsApp Link</label>
+          <input type="url" id="socialWhatsappInput" placeholder="https://wa.me/8801XXXXXXXXX">
+        </div>
+        <button type="submit" class="btn">Save Social Links</button>
+        <div class="msg" id="socialSettingsMsg"></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<!-- ================= MODAL (add/edit form) ================= -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Add New</h3>
+    <form id="itemForm"></form>
+  </div>
+</div>
+
+<!-- ================= VIDEO STOCK MANAGER ================= -->
+<div class="overlay" id="vpOverlay">
+  <div class="modal vp-modal">
+    <div class="vp-head">
+      <h3 id="vpTitle">Manage Videos</h3>
+      <button type="button" class="btn-ghost" id="vpCloseBtn">Close</button>
+    </div>
+    <div id="vpBody"></div>
+  </div>
+</div>
+
+<!-- ================= ACTION RESULT POPUP (approve/reject etc.) ================= -->
+<div class="overlay" id="actionResultOverlay">
+  <div class="modal action-result-modal">
+    <div class="action-result-icon" id="actionResultIcon"></div>
+    <h3 id="actionResultTitle">Done</h3>
+    <p id="actionResultMsg"></p>
+    <button type="button" class="btn" id="actionResultOkBtn">OK</button>
+  </div>
+</div>
+
+<!-- ================= USER WALLET BALANCE EDIT MODAL ================= -->
+<div class="overlay" id="userBalanceOverlay">
+  <div class="modal">
+    <h3>Edit Wallet Balance</h3>
+    <form id="userBalanceForm">
+      <div class="field">
+        <label id="userBalanceUserLabel">User</label>
+      </div>
+      <div class="field">
+        <label>New Balance (Tk)</label>
+        <input type="number" id="userBalanceInput" step="0.01" min="0" required>
+      </div>
+      <div class="msg" id="userBalanceMsg"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="userBalanceCancelBtn">Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc,
+    increment, runTransaction, serverTimestamp, getCountFromServer, query, where,
+    getDocs, limit, writeBatch, deleteField
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getStorage, ref as storageRef, uploadBytes, uploadBytesResumable, getDownloadURL
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyAxFnJP3DwWC31P0jP3E_30r38qtUol0iQ",
+  authDomain: "creatorrivo.firebaseapp.com",
+  projectId: "creatorrivo",
+  storageBucket: "creatorrivo.firebasestorage.app",
+  messagingSenderId: "862514355485",
+  appId: "1:862514355485:web:d984df8a56e1fb1d51d5f4"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const storage = getStorage(app);
+
+  /* Escapes text that came from end users (ticket subject/message, deposit
+     note/txn id, names) before inserting via innerHTML. This is the admin
+     panel — it renders content from EVERY user, so an unescaped field here
+     is a stored-XSS hole: a malicious visitor could submit a ticket with a
+     <script> payload that then runs in the admin's authenticated session. */
+  function escapeHtml(str){
+    if(str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /* ---------- Collection definitions ---------- */
+  const SCHEMA = {
+    categories: {
+      fields: [
+        {key:'name', label:'Category Name', type:'text', required:true},
+      ],
+      columns:['name'],
+    },
+    courses: {
+      fields: [
+        {key:'title', label:'Title', type:'text', required:true},
+        {key:'category', label:'Category', type:'category'},
+        {key:'price', label:'Price (Tk)', type:'number', required:true},
+        {key:'oldPrice', label:'Old Price (Tk)', type:'number'},
+        {key:'discount', label:'Discount Badge Text (e.g. 60% OFF)', type:'text'},
+        {key:'imageUrl', label:'Image URL (optional)', type:'text'},
+        {key:'videoId', label:'YouTube Video ID (optional, e.g. dQw4w9WgXcQ)', type:'text'},
+        {key:'downloadUrl', label:'Drive Download Link (optional)', type:'text'},
+        {key:'description', label:'Detailed Description', type:'textarea'},
+        {key:'features', label:'Feature List (one per line)', type:'list'},
+      ],
+      columns:['title','category','price','oldPrice','discount'],
+    },
+    products: {
+      fields: [
+        {key:'name', label:'Name', type:'text', required:true},
+        {key:'price', label:'Price (Tk)', type:'number', required:true},
+        {key:'oldPrice', label:'Old Price (Tk)', type:'number'},
+        {key:'imageUrl', label:'Image URL (optional)', type:'text'},
+        {key:'videoId', label:'Product Video — YouTube link or ID (optional; shows in place of the image)', type:'text'},
+        {key:'productType', label:'Product Type', type:'select', options:[['physical','Physical — needs delivery (address collected)'],['digital','Digital — download link']]},
+        {key:'stock', label:'Stock — quantity available (Physical only; unlimited if left blank)', type:'number'},
+        {key:'deliveryInside', label:'Delivery inside Dhaka (days) — defaults to 5', type:'number'},
+        {key:'deliveryOutside', label:'Delivery outside Dhaka (days) — defaults to 10', type:'number'},
+        {key:'deliveryCharge', label:'Advance / Delivery Charge (Tk) — Physical only. Customer pays just this now; the rest is Cash on Delivery. Leave blank/0 to charge the full price upfront.', type:'number'},
+        {key:'downloadUrl', label:'Download Link (if Digital)', type:'text'},
+        {key:'description', label:'Detailed Description', type:'textarea'},
+        {key:'features', label:'Feature List (one per line)', type:'list'},
+      ],
+      columns:['name','price','oldPrice','productType','stock'],
+    },
+    games: {
+      fields: [
+        {key:'name', label:'Game/Stream Name', type:'text', required:true},
+        {key:'imageUrl', label:'Thumbnail Image URL (not needed if a video is set)', type:'text'},
+        {key:'videoId', label:'Preview Video — YouTube link or ID (optional; plays at the top of the page)', type:'text'},
+        {key:'description', label:'Detailed Description', type:'textarea'},
+        // Price fields are NOT listed here anymore — they're generated at
+        // runtime from the admin's own customizable plan list (see
+        // gameTiers / fieldsFor()) so the set of plans isn't hardcoded.
+        {key:'gameHtml', label:'Game\'s Complete HTML Code', type:'textarea', required:true, rows:14, mono:true},
+      ],
+      columns:['name','__startPrice','__planCount'],
+    },
+    videopacks: {
+      fields: [
+        {key:'title', label:'Video Pack Name', type:'text', required:true},
+        {key:'imageUrl', label:'Thumbnail Image URL (not needed if a video is set)', type:'text'},
+        {key:'videoId', label:'Preview Video — YouTube link or ID (optional; plays at the top of the page)', type:'text'},
+        {key:'description', label:'Detailed Description', type:'textarea'},
+        {key:'price1', label:'Price for 1 (Tk)', type:'number', required:true},
+        {key:'price5', label:'Price for 5 (Tk)', type:'number', required:true},
+        {key:'price10', label:'Price for 10 (Tk)', type:'number', required:true},
+      ],
+      columns:['title','price1','price5','price10','stock'],
+    },
+    testimonials: {
+      fields: [
+        {key:'text', label:'Review Text', type:'textarea', required:true},
+        {key:'name', label:'Name', type:'text', required:true},
+        {key:'location', label:'Location', type:'text'},
+        {key:'avatarUrl', label:'Avatar Image URL (optional; shows the name\'s first letter if omitted)', type:'text'},
+      ],
+      columns:['text','name','location'],
+    },
+    notices: {
+      fields: [
+        {key:'date', label:'Date (e.g. Aug 29, 2026) — not needed for video notices', type:'text'},
+        {key:'text', label:'Message (for a video notice, this shows as the title below the video)', type:'textarea', required:true},
+        {key:'videoId', label:'Video — YouTube link or ID (optional; shows as a "Video Notice" if set)', type:'text'},
+      ],
+      columns:['date','text','videoId'],
+    },
+  };
+
+  // Mirrors each section's <thead> text — used to label values in the
+  // stacked card layout the tables collapse into on mobile.
+  const COLUMN_LABELS = {
+    categories: ['Category Name'],
+    courses: ['Title','Category','Price','Old Price','Discount'],
+    products: ['Name','Price','Old Price','Type','Stock'],
+    games: ['Name','Starting Price','Plan Count'],
+    videopacks: ['Name','1x','5x','10x','Stock'],
+    testimonials: ['Review','Name','Location'],
+    notices: ['Date','Message','Video'],
+  };
+
+  const cache = { categories:[], courses:[], products:[], games:[], videopacks:[], testimonials:[], notices:[] };
+  let unsubscribers = [];
+
+  /* ---------- Game subscription plans — admin-customizable, not hardcoded ----------
+     Stored at settings/gameTiers as {tiers:[{key,label,hours}, ...]}. Each
+     game document (games/{id}) then holds one price field per tier under
+     that tier's `key` (e.g. game.price_abc123). A tier's key never changes
+     once created (even if the label/duration is edited later or the tier
+     is reordered), so existing games' saved prices always line up with the
+     right plan. DEFAULT_GAME_TIERS is only the starting set shown until the
+     admin saves their own list for the first time. */
+  const DEFAULT_GAME_TIERS = [
+    { hours:2,      label:'2 Hours',  key:'price2h'  },
+    { hours:24,     label:'1 Days',   key:'price1d'  },
+    { hours:24*7,   label:'7 Days',   key:'price7d'  },
+    { hours:24*30,  label:'30 Days',  key:'price30d' },
+    { hours:24*60,  label:'60 Days',  key:'price60d' },
+  ];
+  let gameTiers = DEFAULT_GAME_TIERS.map(t => ({ ...t }));
+
+  function newTierKey(){
+    return 'price_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  async function loadGameTiersSettings(){
+    try{
+      const snap = await getDoc(doc(db, 'settings', 'gameTiers'));
+      const t = snap.exists() ? snap.data().tiers : null;
+      gameTiers = (Array.isArray(t) && t.length) ? t : DEFAULT_GAME_TIERS.map(x => ({ ...x }));
+    }catch(err){
+      console.error('gameTiers load error:', err);
+      gameTiers = DEFAULT_GAME_TIERS.map(x => ({ ...x }));
+    }
+    renderGameTierRows();
+    if(cache.games.length) renderTable('games');
+  }
+
+  function renderGameTierRows(){
+    const wrap = document.getElementById('gameTierRows');
+    if(!wrap) return;
+    wrap.innerHTML = gameTiers.map(t=>{
+      const isDays = t.hours % 24 === 0;
+      const durationVal = isDays ? (t.hours / 24) : t.hours;
+      return `
+        <div class="tier-row" data-key="${esc(t.key)}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <input type="text" class="tier-label" value="${esc(t.label)}" placeholder="Plan name, e.g. 2 Hours" style="flex:1.3; padding:9px 10px; border-radius:8px; border:1.5px solid var(--line); font-family:inherit; font-size:0.88rem;">
+          <input type="number" class="tier-duration" min="1" value="${durationVal}" style="width:76px; padding:9px 10px; border-radius:8px; border:1.5px solid var(--line); font-family:inherit; font-size:0.88rem;">
+          <select class="tier-unit" style="width:96px; padding:9px 6px; border-radius:8px; border:1.5px solid var(--line); font-family:inherit; font-size:0.88rem;">
+            <option value="hours" ${isDays ? '' : 'selected'}>Hours</option>
+            <option value="days" ${isDays ? 'selected' : ''}>Days</option>
+          </select>
+          <button type="button" class="icon-btn tier-remove-btn" title="Remove">✕</button>
+        </div>`;
+    }).join('');
+    wrap.querySelectorAll('.tier-remove-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const key = btn.closest('.tier-row').dataset.key;
+        gameTiers = gameTiers.filter(t => t.key !== key);
+        renderGameTierRows();
+      });
+    });
+  }
+
+  document.getElementById('addGameTierBtn').addEventListener('click', ()=>{
+    gameTiers = gameTiers.concat([{ key: newTierKey(), label: '', hours: 24 }]);
+    renderGameTierRows();
+  });
+
+  document.getElementById('saveGameTiersBtn').addEventListener('click', async ()=>{
+    const msg = document.getElementById('gameTiersMsg');
+    const rows = document.querySelectorAll('#gameTierRows .tier-row');
+    const updated = [];
+    for(const row of rows){
+      const key = row.dataset.key;
+      const label = row.querySelector('.tier-label').value.trim();
+      const duration = Number(row.querySelector('.tier-duration').value);
+      const unit = row.querySelector('.tier-unit').value;
+      if(!label || !duration || duration <= 0){
+        msg.textContent = 'Please enter a valid name and duration for every plan.';
+        msg.className = 'msg err';
+        return;
+      }
+      updated.push({ key, label, hours: unit === 'days' ? duration * 24 : duration });
+    }
+    if(updated.length === 0){
+      msg.textContent = 'At least one plan is required.';
+      msg.className = 'msg err';
+      return;
+    }
+    try{
+      await setDoc(doc(db, 'settings', 'gameTiers'), { tiers: updated }, { merge: true });
+      gameTiers = updated;
+      msg.textContent = 'Saved!';
+      msg.className = 'msg ok';
+      showToast('Game plans saved');
+      renderTable('games');
+    }catch(err){
+      msg.textContent = 'Could not save — check Firestore rules.';
+      msg.className = 'msg err';
+      console.error(err);
+    }
+  });
+
+  // Returns SCHEMA[collKey].fields, but for 'games' splices in one
+  // number field per configured plan (right before the HTML-code field) —
+  // this is what makes the price fields customizable instead of fixed.
+  function fieldsFor(collKey){
+    const base = SCHEMA[collKey].fields;
+    if(collKey !== 'games') return base;
+    const priceFields = gameTiers.map(t => ({ key: t.key, label: `${t.label || t.key} Plan Price (Tk)`, type: 'number' }));
+    const idx = base.findIndex(f => f.key === 'gameHtml');
+    const merged = base.slice();
+    merged.splice(idx < 0 ? merged.length : idx, 0, ...priceFields);
+    return merged;
+  }
+
+  function gameStartPrice(item){
+    const prices = gameTiers.map(t => Number(item[t.key] || 0)).filter(p => p > 0);
+    return prices.length ? Math.min(...prices) : Number(item.price || 0);
+  }
+
+  /* Accepts a raw YouTube video ID or any common YouTube URL format
+     (watch?v=, youtu.be/, embed/, shorts/) and returns just the ID.
+     This prevents a pasted full URL from being saved as the "ID",
+     which is what was breaking the homepage thumbnail/playback. */
+  function extractYouTubeId(raw){
+    if(!raw) return '';
+    const s = String(raw).trim();
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtube\.com\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{6,15})/
+    ];
+    for(const re of patterns){
+      const m = s.match(re);
+      if(m && m[1]) return m[1];
+    }
+    try{
+      const u = new URL(s);
+      const v = u.searchParams.get('v');
+      if(v) return v;
+    }catch(e){ /* not a URL, fall through */ }
+    return s;
+  }
+
+  /* ---------- Auth ---------- */
+  const loginScreen = document.getElementById('loginScreen');
+  const adminShell = document.getElementById('adminShell');
+
+  document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('adminEmail').value.trim();
+    const pass = document.getElementById('adminPass').value.trim();
+    const msg = document.getElementById('loginMsg');
+    msg.textContent = ''; msg.className = 'msg';
+    try{
+      await signInWithEmailAndPassword(auth, email, pass);
+    }catch(err){
+      msg.textContent = 'Login failed — check that the email/password are correct and that the user exists in Firebase Authentication.';
+      msg.className = 'msg err';
+      console.error(err);
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', ()=> signOut(auth));
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(user){
+      // Security check: only allow access if this account is flagged as
+      // an admin in Firestore (users/{uid}.role === 'admin'). Without this,
+      // any regular storefront customer who registers on the public site
+      // (same Firebase project) could open this panel and get full access.
+      let isAdmin = false;
+      try{
+        const uSnap = await getDoc(doc(db, 'users', user.uid));
+        isAdmin = uSnap.exists() && uSnap.data().role === 'admin';
+      }catch(err){
+        console.error('admin role check failed:', err);
+      }
+      if(!isAdmin){
+        const msg = document.getElementById('loginMsg');
+        msg.textContent = 'This account has no admin panel access. Set role: "admin" on the users/'+user.uid+' document in Firestore.';
+        msg.className = 'msg err';
+        await signOut(auth);
+        return;
+      }
+      loginScreen.style.display = 'none';
+      adminShell.classList.add('active');
+      document.getElementById('adminEmailLabel').textContent = user.email || '';
+      attachListeners();
+    } else {
+      adminShell.classList.remove('active');
+      loginScreen.style.display = 'flex';
+      unsubscribers.forEach(fn=>fn());
+      unsubscribers = [];
+    }
+  });
+
+  /* ---------- Sidebar nav ---------- */
+  document.querySelectorAll('.nav-item[data-section]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.nav-item[data-section]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const key = btn.dataset.section;
+      document.querySelectorAll('.admin-section').forEach(sec=>{
+        sec.style.display = sec.dataset.section === key ? 'block' : 'none';
+      });
+      const mobileTitle = document.getElementById('mobilePageTitle');
+      if(mobileTitle) mobileTitle.textContent = btn.dataset.title || btn.textContent.trim();
+      if(key === 'analytics') replayAnalyticsAnimations();
+      closeDrawer();
+    });
+  });
+
+  /* ---------- Mobile hamburger drawer ---------- */
+  const sidebarEl = document.getElementById('adminSidebar');
+  const drawerBackdrop = document.getElementById('drawerBackdrop');
+  function openDrawer(){
+    sidebarEl.classList.add('open');
+    drawerBackdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer(){
+    sidebarEl.classList.remove('open');
+    drawerBackdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('hamburgerBtn')?.addEventListener('click', openDrawer);
+  document.getElementById('drawerCloseBtn')?.addEventListener('click', closeDrawer);
+  drawerBackdrop?.addEventListener('click', closeDrawer);
+
+  /* Re-triggers the stat-card/chart-card entrance animation and redraws the
+     charts each time the Analytics tab is opened, instead of only once on
+     page load. */
+  function replayAnalyticsAnimations(){
+    document.querySelectorAll('#statsGrid .stat-card, .chart-card').forEach(card=>{
+      card.style.animation = 'none';
+      void card.offsetWidth; /* force reflow so the animation restarts */
+      card.style.animation = '';
+    });
+    renderCharts();
+  }
+
+  /* ---------- Analytics (Firestore aggregate queries — no full downloads) ---------- */
+  async function loadAnalytics(){
+    const set = (id, val)=>{
+      const el = document.getElementById(id);
+      if(el) animateCountUp(el, Number(val) || 0);
+    };
+    try{
+      const [
+        usersCount, ordersCount, coursesCount, productsCount,
+        pendingOrdersCount, openTicketsCount, pendingDepositsCount
+      ] = await Promise.all([
+        getCountFromServer(collection(db, 'users')),
+        getCountFromServer(collection(db, 'orders')),
+        getCountFromServer(collection(db, 'courses')),
+        getCountFromServer(collection(db, 'products')),
+        getCountFromServer(query(collection(db, 'orders'), where('status', '==', 'pending'))),
+        getCountFromServer(query(collection(db, 'supportTickets'), where('status', '==', 'open'))),
+        getCountFromServer(query(collection(db, 'walletTransactions'), where('type', '==', 'deposit'), where('status', '==', 'pending'))),
+      ]);
+      set('statUsers', usersCount.data().count);
+      set('statOrders', ordersCount.data().count);
+      set('statCourses', coursesCount.data().count);
+      set('statProducts', productsCount.data().count);
+      set('statPendingOrders', pendingOrdersCount.data().count);
+      set('statOpenTickets', openTicketsCount.data().count);
+      set('statPendingDeposits', pendingDepositsCount.data().count);
+      updateRevenueStat();
+      renderCharts();
+    }catch(err){
+      console.error('loadAnalytics error:', err);
+      showToast('Could not load analytics');
+    }
+  }
+
+  /* Animates a <strong> stat number counting up from its current value to
+     the target over ~800ms with an ease-out curve. Preserves a leading Tk symbol
+     prefix (used by statRevenue) so currency formatting survives the count. */
+  function animateCountUp(el, target){
+    const prefix = el.textContent.trim().startsWith('Tk') ? 'Tk' : '';
+    const startText = el.textContent.replace(/[^\d]/g, '');
+    const start = Number(startText) || 0;
+    if(start === target){ el.textContent = prefix + target.toLocaleString('en-US'); return; }
+    const duration = 800;
+    const startTime = performance.now();
+    function tick(now){
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(start + (target - start) * eased);
+      el.textContent = prefix + value.toLocaleString('en-US');
+      if(progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* Revenue is computed client-side from the orders already held in ordersCache
+     (loaded via the live onSnapshot listener) instead of a Firestore sum()
+     aggregation query — sum()/average() aggregations need extra index setup
+     that plain count() queries don't, and were failing with
+     "failed-precondition" on a fresh project. Summing locally sidesteps that
+     entirely and stays in sync automatically whenever orders change. */
+  function updateRevenueStat(){
+    const el = document.getElementById('statRevenue');
+    if(!el) return;
+    const totalRevenue = ordersCache
+      .filter(o => o.status === 'completed')
+      .reduce((sum, o) => sum + Number(o.total || 0), 0);
+    animateCountUp(el, totalRevenue);
+  }
+
+  /* ---------- Charts (hand-drawn SVG/DOM, no external chart library) ---------- */
+  function renderCharts(){
+    renderRevenueBarChart();
+    renderStatusDonutChart();
+  }
+
+  function renderRevenueBarChart(){
+    const wrap = document.getElementById('revenueChart');
+    if(!wrap) return;
+    const days = 14;
+    const dayKeys = [];
+    const dayLabels = [];
+    const today = new Date();
+    for(let i = days - 1; i >= 0; i--){
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dayKeys.push(d.toISOString().slice(0, 10));
+      dayLabels.push(d.toLocaleDateString('bn-BD', { day:'numeric', month:'short' }));
+    }
+    const revenueByDay = Object.fromEntries(dayKeys.map(k => [k, 0]));
+    ordersCache.forEach(o=>{
+      if(o.status !== 'completed' || !o.createdAt?.toDate) return;
+      const key = o.createdAt.toDate().toISOString().slice(0, 10);
+      if(key in revenueByDay) revenueByDay[key] += Number(o.total || 0);
+    });
+    const maxVal = Math.max(...dayKeys.map(k => revenueByDay[k]), 1);
+    const hasAnyRevenue = dayKeys.some(k => revenueByDay[k] > 0);
+    if(!hasAnyRevenue){
+      wrap.innerHTML = '<p class="chart-empty">No completed orders yet.</p>';
+      return;
+    }
+    wrap.innerHTML = dayKeys.map((k, i)=> `
+      <div class="bar-col">
+        <div class="bar-track">
+          <div class="bar" data-height="${Math.max(4, Math.round((revenueByDay[k] / maxVal) * 150))}" title="Tk${revenueByDay[k].toLocaleString('en-US')}"></div>
+        </div>
+        <span class="bar-label">${dayLabels[i]}</span>
+      </div>
+    `).join('');
+    requestAnimationFrame(()=>{
+      wrap.querySelectorAll('.bar').forEach(bar=>{
+        bar.style.height = bar.dataset.height + 'px';
+      });
+    });
+  }
+
+  function renderStatusDonutChart(){
+    const wrap = document.getElementById('statusChart');
+    if(!wrap) return;
+    if(ordersCache.length === 0){
+      wrap.innerHTML = '<p class="chart-empty">No orders yet.</p>';
+      return;
+    }
+    const counts = {};
+    ordersCache.forEach(o=>{ counts[o.status] = (counts[o.status] || 0) + 1; });
+    const statuses = Object.keys(counts).filter(s => counts[s] > 0);
+    const total = ordersCache.length;
+    const radius = 52, circumference = 2 * Math.PI * radius;
+    let offsetAcc = 0;
+    const segments = statuses.map(s=>{
+      const frac = counts[s] / total;
+      const seg = {
+        status: s, count: counts[s],
+        color: orderStatusColor[s] || '#999',
+        label: orderStatusLabel[s] || s,
+        dash: frac * circumference,
+        offset: offsetAcc
+      };
+      offsetAcc += frac * circumference;
+      return seg;
+    });
+    const circles = segments.map(seg => `
+      <circle cx="70" cy="70" r="${radius}" fill="none" stroke="${seg.color}" stroke-width="16"
+        stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+        stroke-linecap="butt"></circle>
+    `).join('');
+    wrap.innerHTML = `
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        ${circles}
+        <text x="70" y="66" class="donut-center-value" font-size="20">${total}</text>
+        <text x="70" y="84" class="donut-center-label" font-size="10">Total Orders</text>
+      </svg>
+      <div class="donut-legend">
+        ${segments.map(seg => `
+          <div class="legend-row">
+            <span class="legend-dot" style="background:${seg.color};"></span>
+            <span class="legend-name">${seg.label}</span>
+            <span class="legend-count">${seg.count}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    /* Each segment needs its own rotation to sit after the previous ones,
+       since plain stroke-dashoffset alone always starts from 12 o'clock. */
+    const circleEls = wrap.querySelectorAll('circle');
+    circleEls.forEach((c, i)=>{
+      const seg = segments[i];
+      const rotateDeg = (seg.offset / circumference) * 360 - 90;
+      c.setAttribute('transform', `rotate(${rotateDeg} 70 70)`);
+    });
+    requestAnimationFrame(()=>{
+      circleEls.forEach((c, i)=>{
+        c.style.strokeDashoffset = circumference - segments[i].dash;
+      });
+    });
+  }
+
+  document.getElementById('refreshStatsBtn').addEventListener('click', loadAnalytics);
+
+  /* ---------- Live data listeners ---------- */
+
+  /* ==================== Live Stream + YouTube/FB Sell admin ==================== */
+  /* liveStreams/main  (public: title, status, videoUrl, watchVideo, channelId, desired, ...)
+     liveSecrets/main  (admin-only: streamKey) — the key is NEVER put in the public doc. */
+  function attachLiveAdmin(){
+    const $ = id => document.getElementById(id);
+    const msg = $('liveFormMsg');
+    let current = {};
+    const say = (t, cls)=>{ msg.textContent = t; msg.className = 'msg ' + (cls || ''); };
+
+    $('liveKeyToggle').addEventListener('click', ()=>{
+      const i = $('liveKeyInput');
+      const show = i.type === 'password';
+      i.type = show ? 'text' : 'password';
+      $('liveKeyToggle').textContent = show ? 'Hide' : 'Show';
+    });
+
+    const pillStyles = {
+      live:     ['LIVE', '#DC2626', '#fff'],
+      starting: ['STARTING...', '#F59E0B', '#fff'],
+      error:    ['ERROR', '#7F1D1D', '#fff'],
+      idle:     ['OFFLINE', '#e8ecea', '#667085']
+    };
+    function renderStatus(d){
+      const st = (d && d.status) || 'idle';
+      const [label, bg, fg] = pillStyles[st] || pillStyles.idle;
+      const pill = $('liveStatusPill');
+      pill.textContent = label; pill.style.background = bg; pill.style.color = fg;
+      $('liveStatusMsg').textContent = (d && d.statusMessage) || '';
+      const badge = $('liveNavBadge');
+      if(badge) badge.style.display = st === 'live' ? 'inline-flex' : 'none';
+
+      // Worker heartbeat: if we want it ON but the server hasn't reported in for a while, say so.
+      const warn = $('liveWorkerWarn');
+      const hb = d && d.heartbeatAt && d.heartbeatAt.toMillis ? d.heartbeatAt.toMillis() : 0;
+      if(d && d.desired === 'on' && (!hb || Date.now() - hb > 90000)){
+        warn.style.display = 'block';
+        warn.textContent = 'The live-worker server is not responding. Make sure it is running (see live-worker/README.md).';
+      }else{
+        warn.style.display = 'none';
+      }
+    }
+
+    const unsub = onSnapshot(doc(db, 'liveStreams', 'main'), snap=>{
+      current = snap.exists() ? snap.data() : {};
+      renderStatus(current);
+      if(document.activeElement !== $('liveTitleInput')) $('liveTitleInput').value = current.title || '';
+      if(document.activeElement !== $('liveWatchInput')) $('liveWatchInput').value = current.watchVideo || '';
+      if(document.activeElement !== $('liveChannelInput')) $('liveChannelInput').value = current.channelId || '';
+      $('liveCurrentVideo').textContent = current.videoName ? 'Current video: ' + current.videoName : 'No video uploaded yet.';
+    }, err=> console.error('live admin snapshot error:', err));
+    unsubscribers.push(unsub);
+    // keep the "no heartbeat" warning fresh even when nothing changes in Firestore
+    const tick = setInterval(()=> renderStatus(current), 15000);
+    unsubscribers.push(()=> clearInterval(tick));
+
+    // Key field is blank on load (we never read the key back into the page).
+    getDoc(doc(db, 'liveSecrets', 'main')).then(s=>{
+      if(s.exists() && s.data().streamKey) $('liveKeyInput').placeholder = '•••••••• (saved — type to replace)';
+    }).catch(()=>{});
+
+    function uploadVideo(file){
+      return new Promise((resolve, reject)=>{
+        const prog = $('liveUploadProg');
+        prog.style.display = 'block'; prog.value = 0;
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const r = storageRef(storage, `live/${Date.now()}_${safe}`);
+        const task = uploadBytesResumable(r, file);
+        task.on('state_changed',
+          s=>{ prog.value = Math.round(s.bytesTransferred / s.totalBytes * 100); say('Uploading video... ' + prog.value + '%'); },
+          err=>{ prog.style.display = 'none'; reject(err); },
+          async ()=>{ const url = await getDownloadURL(task.snapshot.ref); prog.style.display = 'none'; resolve({ url, name: file.name }); });
+      });
+    }
+
+    $('liveStartBtn').addEventListener('click', async ()=>{
+      const btn = $('liveStartBtn');
+      const keyTyped = $('liveKeyInput').value.trim();
+      const file = $('liveVideoFile').files[0];
+      btn.disabled = true;
+      try{
+        let hasKey = !!keyTyped;
+        if(!hasKey){
+          const s = await getDoc(doc(db, 'liveSecrets', 'main'));
+          hasKey = s.exists() && !!s.data().streamKey;
+        }
+        if(!hasKey) throw new Error('Please paste your YouTube stream key.');
+        if(!file && !current.videoUrl) throw new Error('Please choose a video to loop.');
+
+        const data = {
+          title: $('liveTitleInput').value.trim() || 'Live Stream',
+          watchVideo: $('liveWatchInput').value.trim(),
+          channelId: $('liveChannelInput').value.trim(),
+          desired: 'on',
+          // bumping this tells the worker to (re)start even if it was already running
+          restartToken: Date.now(),
+          updatedAt: serverTimestamp()
+        };
+        if(file){
+          const up = await uploadVideo(file);
+          data.videoUrl = up.url; data.videoName = up.name;
+        }
+        if(keyTyped) await setDoc(doc(db, 'liveSecrets', 'main'), { streamKey: keyTyped, updatedAt: serverTimestamp() }, { merge: true });
+        data.status = 'starting'; data.statusMessage = 'Waiting for the worker...';
+        await setDoc(doc(db, 'liveStreams', 'main'), data, { merge: true });
+        $('liveKeyInput').value = ''; $('liveVideoFile').value = '';
+        say('Start command sent. It usually goes live within about 30 seconds.', 'ok');
+      }catch(err){
+        console.error('live start error:', err);
+        say(err.message || 'Could not start. Check storage/Firestore rules.', 'err');
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    $('liveStopBtn').addEventListener('click', async ()=>{
+      try{
+        await setDoc(doc(db, 'liveStreams', 'main'), { desired: 'off', updatedAt: serverTimestamp() }, { merge: true });
+        say('Stop command sent.', 'ok');
+      }catch(err){ console.error(err); say('Could not stop.', 'err'); }
+    });
+
+    /* ---------- YouTube & Facebook Sell (collection: socialSell) ---------- */
+    const tbody = $('tbody-sell');
+    const unsubSell = onSnapshot(collection(db, 'socialSell'), snap=>{
+      const rows = [];
+      snap.forEach(d => rows.push({ id:d.id, ...d.data() }));
+      if(!rows.length){ tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No listings yet.</td></tr>'; return; }
+      const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      tbody.innerHTML = rows.map(r => `<tr>
+        <td>${r.platform === 'facebook' ? 'Facebook' : 'YouTube'}</td>
+        <td>${esc(r.title)}</td>
+        <td>Tk${Number(r.price || 0).toLocaleString('en-US')}</td>
+        <td>${r.status === 'sold' ? 'Sold' : 'Available'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-ghost" data-sell-toggle="${r.id}" data-cur="${r.status === 'sold' ? 'sold' : 'available'}" style="padding:6px 10px; min-height:0;">${r.status === 'sold' ? 'Mark available' : 'Mark sold'}</button>
+          <button class="btn-ghost" data-sell-del="${r.id}" style="padding:6px 10px; min-height:0; color:var(--danger);">Delete</button>
+        </td></tr>`).join('');
+    }, err=> console.error('socialSell snapshot error:', err));
+    unsubscribers.push(unsubSell);
+
+    tbody.addEventListener('click', async (e)=>{
+      const t = e.target.closest('[data-sell-toggle]');
+      const d = e.target.closest('[data-sell-del]');
+      try{
+        if(t) await updateDoc(doc(db, 'socialSell', t.dataset.sellToggle), { status: t.dataset.cur === 'sold' ? 'available' : 'sold' });
+        if(d && confirm('Delete this listing?')) await deleteDoc(doc(db, 'socialSell', d.dataset.sellDel));
+      }catch(err){ console.error(err); showToast('Action failed'); }
+    });
+
+    $('sellForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const m = $('sellMsg');
+      try{
+        await addDoc(collection(db, 'socialSell'), {
+          platform: $('sellPlatform').value,
+          title: $('sellTitle').value.trim(),
+          followers: $('sellFollowers').value.trim(),
+          price: Number($('sellPrice').value) || 0,
+          description: $('sellDesc').value.trim(),
+          status: 'available',
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+        m.textContent = 'Listing added.'; m.className = 'msg ok';
+      }catch(err){
+        console.error(err);
+        m.textContent = 'Could not save. Check Firestore rules.'; m.className = 'msg err';
+      }
+    });
+  }
+
+  function attachListeners(){
+    loadAnalytics();
+    attachLiveAdmin();
+    loadGameTiersSettings();
+    Object.keys(SCHEMA).forEach(key=>{
+      const unsub = onSnapshot(collection(db, key), (snap)=>{
+        cache[key] = [];
+        snap.forEach(d => cache[key].push({ id: d.id, ...d.data() }));
+        renderTable(key);
+      }, (err)=>{
+        console.error(key, 'listen error:', err);
+        document.getElementById('tbody-'+key).innerHTML =
+          `<tr class="empty-row"><td colspan="6">Could not load data — check Firestore rules.</td></tr>`;
+      });
+      unsubscribers.push(unsub);
+    });
+    const ticketUnsub = onSnapshot(collection(db, 'supportTickets'), (snap)=>{
+      ticketsCache = [];
+      snap.forEach(d => ticketsCache.push({ id: d.id, ...d.data() }));
+      ticketsCache.sort((a,b)=> (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderTickets();
+    }, (err)=>{
+      console.error('tickets listen error:', err);
+      document.getElementById('ticketAdminList').innerHTML =
+        '<p style="color:var(--coral);">Could not load tickets — check Firestore rules.</p>';
+    });
+    unsubscribers.push(ticketUnsub);
+
+    const orderUnsub = onSnapshot(collection(db, 'orders'), (snap)=>{
+      ordersCache = [];
+      snap.forEach(d => ordersCache.push({ id: d.id, ...d.data() }));
+      ordersCache.sort((a,b)=> (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderOrders();
+      updateRevenueStat();
+      renderCharts();
+    }, (err)=>{
+      console.error('orders listen error:', err);
+      document.getElementById('orderAdminList').innerHTML =
+        '<p style="color:var(--coral);">Could not load orders — check Firestore rules.</p>';
+    });
+    unsubscribers.push(orderUnsub);
+
+    const walletUnsub = onSnapshot(collection(db, 'walletTransactions'), (snap)=>{
+      walletTxnCache = [];
+      snap.forEach(d => walletTxnCache.push({ id: d.id, ...d.data() }));
+      walletTxnCache.sort((a,b)=> (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderWalletAdmin();
+    }, (err)=>{
+      console.error('wallet listen error:', err);
+      document.getElementById('walletAdminList').innerHTML =
+        '<p style="color:var(--coral);">Could not load — check Firestore rules.</p>';
+    });
+    unsubscribers.push(walletUnsub);
+
+    const usersUnsub = onSnapshot(collection(db, 'users'), (snap)=>{
+      usersCache = [];
+      snap.forEach(d => usersCache.push({ id: d.id, ...d.data() }));
+      usersCache.sort((a,b)=> (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderUsers();
+    }, (err)=>{
+      console.error('users listen error:', err);
+      document.getElementById('tbody-users').innerHTML =
+        '<tr class="empty-row"><td colspan="7">Could not load — check Firestore rules.</td></tr>';
+    });
+    unsubscribers.push(usersUnsub);
+
+    loadHomepageSettings();
+  }
+
+  /* ---------- Support tickets (Firestore: collection "supportTickets") ---------- */
+  let ticketsCache = [];
+  const statusLabel = { open:'Open', replied:'Replied', closed:'Closed' };
+  const statusColor = { open:'#F59E0B', replied:'#16A34A', closed:'#6B7280' };
+  function renderTickets(){
+    const wrap = document.getElementById('ticketAdminList');
+    const openCount = ticketsCache.filter(t => t.status === 'open').length;
+    const navBadge = document.getElementById('ticketNavBadge');
+    if(openCount > 0){ navBadge.textContent = openCount; navBadge.style.display = 'flex'; }
+    else { navBadge.style.display = 'none'; }
+
+    if(ticketsCache.length === 0){
+      wrap.innerHTML = '<p style="color:var(--muted);">No tickets yet.</p>';
+      return;
+    }
+    wrap.innerHTML = ticketsCache.map(t => `
+      <div class="ticket-admin-card" data-id="${t.id}">
+        <div class="top-row">
+          <div>
+            <strong>${escapeHtml(t.subject)}</strong>
+            <div class="meta">${escapeHtml(t.name)} · ${escapeHtml(t.email)}</div>
+          </div>
+          <span class="status-pill" style="background:${statusColor[t.status] || '#999'};">${statusLabel[t.status] || t.status}</span>
+        </div>
+        <p style="margin-top:10px; font-size:0.9rem;">${escapeHtml(t.message)}</p>
+        <textarea class="reply-input" rows="2" placeholder="Write a reply...">${escapeHtml(t.adminReply)}</textarea>
+        <div class="actions">
+          <select class="status-select">
+            <option value="open" ${t.status === 'open' ? 'selected' : ''}>Open</option>
+            <option value="replied" ${t.status === 'replied' ? 'selected' : ''}>Replied</option>
+            <option value="closed" ${t.status === 'closed' ? 'selected' : ''}>Closed</option>
+          </select>
+          <button type="button" class="btn save-reply-btn">Save</button>
+        </div>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.ticket-admin-card').forEach(card=>{
+      const id = card.dataset.id;
+      card.querySelector('.save-reply-btn').addEventListener('click', async ()=>{
+        const reply = card.querySelector('.reply-input').value.trim();
+        const status = card.querySelector('.status-select').value;
+        try{
+          await updateDoc(doc(db, 'supportTickets', id), { adminReply: reply, status });
+          showToast('Ticket updated');
+        }catch(err){
+          console.error('ticket update error:', err);
+          showToast('Update failed');
+        }
+      });
+    });
+  }
+
+  /* ---------- Orders (Firestore: collection "orders") ---------- */
+  /* Fields: uid, name, email, items:[{id,type,name,price,qty}], total, status ('pending'|'paid'|'completed'|'cancelled'), createdAt */
+  let ordersCache = [];
+  const orderStatusLabel = { pending:'Pending', paid:'Paid', completed:'Completed', cancelled:'Cancelled', refunded:'Refunded' };
+  const orderStatusColor = { pending:'#F59E0B', paid:'#2563EB', completed:'#16A34A', cancelled:'#6B7280', refunded:'#7C3AED' };
+  function renderOrders(){
+    const wrap = document.getElementById('orderAdminList');
+    const pendingCount = ordersCache.filter(o => o.status === 'pending').length;
+    const navBadge = document.getElementById('orderNavBadge');
+    if(pendingCount > 0){ navBadge.textContent = pendingCount; navBadge.style.display = 'flex'; }
+    else { navBadge.style.display = 'none'; }
+
+    if(ordersCache.length === 0){
+      wrap.innerHTML = '<p style="color:var(--muted);">No orders yet.</p>';
+      return;
+    }
+    const paymentMethodColor = { bKash:'#E2136E', Nagad:'#F6821F', Rocket:'#8730D6', Wallet:'#0E6E4F' };
+    wrap.innerHTML = ordersCache.map(o => `
+      <div class="ticket-admin-card" data-id="${o.id}">
+        <div class="top-row">
+          <div>
+            <strong>Tk${Number(o.total || 0).toLocaleString('en-US')}</strong>${o.codDue > 0 ? ' <span style="color:var(--muted); font-weight:700; font-size:0.78rem;">(advance paid)</span>' : ''}
+            <div class="meta">${escapeHtml(o.name)} · ${escapeHtml(o.email)}</div>
+            ${o.paymentMethod ? `
+              <div class="meta" style="margin-top:4px;">
+                <span class="status-pill" style="background:${paymentMethodColor[o.paymentMethod] || '#999'};">${escapeHtml(o.paymentMethod)}</span>
+                ${o.transactionId ? ` · TxnID: <strong>${escapeHtml(o.transactionId)}</strong>` : ''}
+              </div>
+            ` : ''}
+            ${o.delivery ? `
+              <div class="meta" style="margin-top:8px; padding:9px 11px; background:#F3FDF9; border:1px solid #C9E7DD; border-radius:10px; line-height:1.6;">
+                <strong>Delivery Info</strong><br>
+                📞 ${escapeHtml(o.delivery.phone)}<br>
+                📍 ${escapeHtml(o.delivery.address)}${o.delivery.country ? ` · ${escapeHtml(o.delivery.country)}` : ''}
+                ${o.codDue > 0 ? `<div style="margin-top:6px; font-weight:800; color:#B45309;">💰 Collect on Delivery: Tk${Number(o.codDue).toLocaleString('en-US')}</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+          <span class="status-pill" style="background:${orderStatusColor[o.status] || '#999'};">${orderStatusLabel[o.status] || o.status}</span>
+        </div>
+        <ul style="margin-top:10px; padding-left:18px; font-size:0.88rem;">
+          ${(o.items || []).map(it => `<li>${escapeHtml(it.name)} × ${Number(it.qty || 0)} — Tk${Number(it.price || 0).toLocaleString('en-US')}</li>`).join('')}
+        </ul>
+        <div class="actions">
+          <select class="order-status-select">
+            <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>Paid</option>
+            <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Completed (unlocks download)</option>
+            <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+          <button type="button" class="btn save-order-btn">Save</button>
+          ${(o.status === 'completed' || o.status === 'paid') && o.uid ? `<button type="button" class="btn refund-order-btn" style="background:#F5F3FF; color:#7C3AED;">Refund (Tk ${Number(o.total||0).toLocaleString('en-US')} back to wallet)</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.ticket-admin-card').forEach(card=>{
+      const id = card.dataset.id;
+      const order = ordersCache.find(o => o.id === id);
+      card.querySelector('.save-order-btn').addEventListener('click', async ()=>{
+        const status = card.querySelector('.order-status-select').value;
+        const becomingCompleted = status === 'completed' && order.status !== 'completed';
+        const needsLinkAllocation = becomingCompleted &&
+          (order.items || []).some(it => it.type === 'videopacks' && it.id && !it.deliveredLinks);
+        // Products/software/courses need their downloadUrl copied onto the order item the
+        // moment the order is marked completed here — this is what makes it show up
+        // on the buyer's "My Downloads" page. Manual (bKash/Nagad/Rocket) orders
+        // never got this at checkout time, only the instant wallet path does (see
+        // detail.js/cart.js payWithWallet, which now stamps it in immediately).
+        const needsDownloadSnapshot = becomingCompleted &&
+          (order.items || []).some(it => (it.type === 'products' || it.type === 'software' || it.type === 'courses') && it.id && !it.downloadUrl);
+        try{
+          if(needsLinkAllocation || needsDownloadSnapshot){
+            // Video-pack links and the download-link
+            // snapshot both need to happen right when the order is approved here
+            // (manual bKash/Nagad/Rocket orders never got this at checkout time —
+            // only the instant wallet path does that inline).
+            for(let attempt = 1; ; attempt++){
+              // For new-system packs: fetch a list of remaining videos before the transaction
+              // (queries don't work inside a transaction). The actual allocation happens in the transaction below,
+              // where every video is re-verified — so the same video never goes to two people.
+              const pools = {};
+              if(needsLinkAllocation){
+                const need = {};
+                (order.items || []).forEach(it=>{
+                  if(it.type === 'videopacks' && it.id && !it.deliveredLinks) need[it.id] = (need[it.id] || 0) + Number(it.qty || 1);
+                });
+                for(const [pid, q] of Object.entries(need)){
+                  const ps = await getDocs(query(collection(db, 'videoStock'), where('packId', '==', pid), where('status', '==', 'available'), limit(q + 20)));
+                  const refs = ps.docs.map(d => d.ref);
+                  for(let i = refs.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [refs[i], refs[j]] = [refs[j], refs[i]]; }
+                  pools[pid] = refs;
+                }
+              }
+              try{
+                await runTransaction(db, async (tx)=>{
+                  const items = order.items || [];
+                  let updatedItems = items;
+
+                  // --- All reads happen first: Firestore transactions require every
+                  // tx.get() to run before any tx.update()/tx.set() call. ---
+                  const packSnaps = {};
+                  const poolSnaps = {};
+                  if(needsLinkAllocation){
+                    const packIdsNeeded = [...new Set(items.filter(it => it.type === 'videopacks' && it.id && !it.deliveredLinks).map(it => it.id))];
+                    for(const packId of packIdsNeeded){
+                      packSnaps[packId] = await tx.get(doc(db, 'videopacks', packId));
+                      if(packSnaps[packId].exists() && packSnaps[packId].data().system === 'v2'){
+                        poolSnaps[packId] = await Promise.all((pools[packId] || []).map(r => tx.get(r)));
+                      }
+                    }
+                  }
+                  const downloadSnaps = {};
+                  if(needsDownloadSnapshot){
+                    const needed = [...new Set(items.filter(it => (it.type === 'products' || it.type === 'software' || it.type === 'courses') && it.id && !it.downloadUrl).map(it => `${it.type}/${it.id}`))];
+                    for(const key of needed){
+                      const [t, itemId] = key.split('/');
+                      downloadSnaps[key] = await tx.get(doc(db, t, itemId));
+                    }
+                  }
+
+                  // --- Now compute the updates and write them ---
+                  if(needsLinkAllocation){
+                    const packAssigned = {}; // legacy system: running assignedCount per pack
+                    const stockUsed = {};    // new system: which video IDs were taken for this order, per pack
+                    const stockCount = {};   // new system: how many were allocated per pack in this order
+                    updatedItems = updatedItems.map(it=>{
+                      if(it.type !== 'videopacks' || !it.id || it.deliveredLinks) return it;
+                      const snap = packSnaps[it.id];
+                      if(!snap || !snap.exists()) return it;
+                      const pack = snap.data();
+                      const qty = Number(it.qty || 1);
+
+                      if(pack.system === 'v2'){
+                        const used = stockUsed[it.id] || (stockUsed[it.id] = new Set());
+                        const free = (poolSnaps[it.id] || []).filter(s => s.exists() && s.data().status === 'available' && s.data().packId === it.id && !used.has(s.id));
+                        if(free.length < qty){
+                          // short in the list itself = genuinely out of stock; otherwise someone else just took it → retry
+                          throw new Error((pools[it.id] || []).length < qty ? 'out-of-stock' : 'stock-race');
+                        }
+                        const picked = free.slice(0, qty);
+                        picked.forEach(s=>{
+                          used.add(s.id);
+                          tx.update(s.ref, { status: 'assigned', uid: order.uid || null, buyerEmail: order.email || '', orderId: id, assignedAt: serverTimestamp() });
+                        });
+                        stockCount[it.id] = (stockCount[it.id] || 0) + qty;
+                        return { ...it, deliveredLinks: picked.map(s => s.data().url) };
+                      }
+
+                      const links = Array.isArray(pack.links) ? pack.links : [];
+                      const startAt = packAssigned[it.id] != null ? packAssigned[it.id] : Number(pack.assignedCount || 0);
+                      const slice = links.slice(startAt, startAt + qty);
+                      packAssigned[it.id] = startAt + slice.length;
+                      return { ...it, deliveredLinks: slice };
+                    });
+                    Object.keys(packAssigned).forEach(packId=>{
+                      tx.update(doc(db, 'videopacks', packId), { assignedCount: packAssigned[packId] });
+                    });
+                    Object.keys(stockCount).forEach(packId=>{
+                      tx.update(doc(db, 'videopacks', packId), { assignedCount: increment(stockCount[packId]) });
+                    });
+                  }
+
+                  if(needsDownloadSnapshot){
+                    updatedItems = updatedItems.map(it=>{
+                      if((it.type !== 'products' && it.type !== 'software' && it.type !== 'courses') || !it.id || it.downloadUrl) return it;
+                      const snap = downloadSnaps[`${it.type}/${it.id}`];
+                      if(!snap || !snap.exists()) return it;
+                      const full = snap.data();
+                      return full.downloadUrl ? { ...it, downloadUrl: full.downloadUrl } : it;
+                    });
+                  }
+
+                  tx.update(doc(db, 'orders', id), { status, items: updatedItems });
+                });
+                break;
+              }catch(txErr){
+                if(txErr && txErr.message === 'stock-race' && attempt < 4) continue;
+                throw txErr;
+              }
+            }
+          } else {
+            await updateDoc(doc(db, 'orders', id), { status });
+          }
+          // on cancel, restore physical-product stock (once only — we clear the stockReserved flag)
+          if(status === 'cancelled' && order.status !== 'cancelled'){
+            const reserved = (order.items || []).filter(it => it.type === 'products' && it.id && it.stockReserved);
+            if(reserved.length){
+              try{
+                for(const it of reserved){
+                  await updateDoc(doc(db, 'products', it.id), { stock: increment(Number(it.qty || 1)) });
+                }
+                await updateDoc(doc(db, 'orders', id), { items: (order.items || []).map(it => it.stockReserved ? { ...it, stockReserved: false } : it) });
+              }catch(e){ console.error('stock restore failed', e); showToast('Order cancelled, but stock could not be restored — please fix manually'); }
+            }
+          }
+          showToast('Order updated');
+        }catch(err){
+          console.error('order update error:', err);
+          showToast(err && err.message === 'out-of-stock' ? 'Not enough videos in stock — add videos from "Manage Videos" first'
+            : err && err.message === 'stock-race' ? 'Stock is changing right now — try again'
+            : 'Update failed');
+        }
+      });
+      const refundBtn = card.querySelector('.refund-order-btn');
+      if(refundBtn){
+        refundBtn.addEventListener('click', async ()=>{
+          if(!confirm('Refund this order? Tk' + Number(order.total||0).toLocaleString('en-US') + ' will be returned to the customer\'s wallet and the order status will change to "Refunded".')) return;
+          refundBtn.disabled = true;
+          try{
+            const userRef = doc(db, 'users', order.uid);
+            const orderRef = doc(db, 'orders', order.id);
+            const txnRef = doc(collection(db, 'walletTransactions'));
+            await runTransaction(db, async (tx)=>{
+              tx.update(userRef, { walletBalance: increment(Number(order.total || 0)) });
+              tx.update(orderRef, { status: 'refunded' });
+              tx.set(txnRef, {
+                uid: order.uid, type: 'refund', status: 'completed', amount: Number(order.total || 0),
+                orderId: order.id, note: 'Order refunded by admin', createdAt: serverTimestamp()
+              });
+            });
+            showToast('Refund completed');
+          }catch(err){
+            console.error('refund error:', err);
+            showToast('Refund failed');
+            refundBtn.disabled = false;
+          }
+        });
+      }
+    });
+  }
+
+  /* ---------- Wallet — deposit requests (Firestore: collection "walletTransactions") ---------- */
+  let walletTxnCache = [];
+  const walletTxnTypeLabel = { deposit:'Deposit', purchase:'Purchase', refund:'Refund' };
+  function renderWalletAdmin(){
+    const wrap = document.getElementById('walletAdminList');
+    const pendingDeposits = walletTxnCache.filter(t => t.type === 'deposit' && t.status === 'pending');
+    const navBadge = document.getElementById('walletNavBadge');
+    if(pendingDeposits.length > 0){ navBadge.textContent = pendingDeposits.length; navBadge.style.display = 'flex'; }
+    else { navBadge.style.display = 'none'; }
+
+    if(walletTxnCache.length === 0){
+      wrap.innerHTML = '<p style="color:var(--muted);">No transactions yet.</p>';
+      return;
+    }
+    wrap.innerHTML = walletTxnCache.map(t => `
+      <div class="ticket-admin-card" data-id="${t.id}">
+        <div class="top-row">
+          <div>
+            <strong>${walletTxnTypeLabel[t.type] || t.type} — Tk${Number(t.amount || 0).toLocaleString('en-US')}</strong>
+            <div class="meta">uid: ${escapeHtml(t.uid)}${t.method ? ' · ' + escapeHtml(t.method) : ''}${t.transactionId ? ' · TxnID: ' + escapeHtml(t.transactionId) : ''}</div>
+            ${t.note ? `<div class="meta">Note: ${escapeHtml(t.note)}</div>` : ''}
+          </div>
+          <span class="status-pill" style="background:${t.status === 'pending' ? '#F59E0B' : (t.status === 'approved' || t.status === 'completed' ? '#16A34A' : '#6B7280')};">${t.status}</span>
+        </div>
+        ${t.type === 'deposit' && t.status === 'pending' ? `
+          <div class="actions">
+            <button type="button" class="btn approve-dep-btn" style="background:#E6F9EE; color:#16A34A;">
+              <span class="btn-text">Approve (balance will be added)</span>
+            </button>
+            <button type="button" class="btn reject-dep-btn" style="background:var(--danger-bg); color:var(--danger);">
+              <span class="btn-text">Reject</span>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.ticket-admin-card').forEach(card=>{
+      const id = card.dataset.id;
+      const txn = walletTxnCache.find(t => t.id === id);
+      const approveBtn = card.querySelector('.approve-dep-btn');
+      const rejectBtn = card.querySelector('.reject-dep-btn');
+      if(approveBtn){
+        approveBtn.addEventListener('click', async ()=>{
+          setBtnLoading(approveBtn, 'Verifying...');
+          try{
+            await runTransaction(db, async (tx)=>{
+              const userRef = doc(db, 'users', txn.uid);
+              tx.update(userRef, { walletBalance: increment(Number(txn.amount || 0)) });
+              tx.update(doc(db, 'walletTransactions', txn.id), { status: 'approved' });
+            });
+            showActionResult(true, 'Deposit Approved', `Tk${Number(txn.amount || 0).toLocaleString('en-US')} has been added to the customer's wallet.`);
+          }catch(err){
+            console.error('deposit approve error:', err);
+            showActionResult(false, 'Approval Failed', 'Please try again.');
+            setBtnLoading(approveBtn, 'Approve (balance will be added)', false);
+          }
+        });
+      }
+      if(rejectBtn){
+        rejectBtn.addEventListener('click', async ()=>{
+          setBtnLoading(rejectBtn, 'Rejecting...');
+          try{
+            await updateDoc(doc(db, 'walletTransactions', txn.id), { status: 'rejected' });
+            showActionResult(true, 'Deposit Rejected', 'The request has been rejected; the balance is unchanged.');
+          }catch(err){
+            console.error('deposit reject error:', err);
+            showActionResult(false, 'Rejection Failed', 'Please try again.');
+            setBtnLoading(rejectBtn, 'Reject', false);
+          }
+        });
+      }
+    });
+  }
+
+  /* Shared helper: toggle a button between its normal label and a
+     disabled state with an inline spinner + loading text. */
+  function setBtnLoading(btn, loadingText, isLoading = true){
+    if(isLoading){
+      if(!btn.dataset.originalLabel) btn.dataset.originalLabel = btn.querySelector('.btn-text').textContent;
+      btn.disabled = true;
+      btn.classList.add('loading');
+      btn.querySelector('.btn-text').textContent = loadingText;
+      if(!btn.querySelector('.btn-inline-spinner')){
+        const spinner = document.createElement('span');
+        spinner.className = 'btn-inline-spinner';
+        btn.appendChild(spinner);
+      }
+    }else{
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.querySelector('.btn-text').textContent = loadingText || btn.dataset.originalLabel || '';
+      const spinner = btn.querySelector('.btn-inline-spinner');
+      if(spinner) spinner.remove();
+    }
+  }
+
+  /* Shared helper: success/fail confirmation popup for admin actions
+     (deposit approve/reject, and anywhere else that wants the same UX). */
+  function showActionResult(success, title, message){
+    const overlay = document.getElementById('actionResultOverlay');
+    const icon = document.getElementById('actionResultIcon');
+    icon.className = 'action-result-icon' + (success ? '' : ' fail');
+    icon.innerHTML = success
+      ? '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    document.getElementById('actionResultTitle').textContent = title;
+    document.getElementById('actionResultMsg').textContent = message || '';
+    overlay.classList.add('open');
+  }
+  document.getElementById('actionResultOkBtn').addEventListener('click', ()=>{
+    document.getElementById('actionResultOverlay').classList.remove('open');
+  });
+  document.getElementById('actionResultOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'actionResultOverlay') document.getElementById('actionResultOverlay').classList.remove('open');
+  });
+
+  /* ---------- Users (Firestore: collection "users") ---------- */
+  let usersCache = [];
+  let userSearchTerm = '';
+  function renderUsers(){
+    const wrap = document.getElementById('tbody-users');
+    if(!wrap) return;
+    const term = userSearchTerm.toLowerCase();
+    const filtered = usersCache.filter(u=>{
+      if(!term) return true;
+      return (u.name || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+    });
+    if(filtered.length === 0){
+      wrap.innerHTML = '<tr class="empty-row"><td colspan="7">No users found.</td></tr>';
+      return;
+    }
+    wrap.innerHTML = filtered.map(u=>{
+      const dateStr = u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('bn-BD') : '—';
+      const isUserAdmin = u.role === 'admin';
+      const isBanned = !!u.banned;
+      const isSelf = auth.currentUser && auth.currentUser.uid === u.id;
+      return `
+        <tr>
+          <td data-label="Name">${escapeHtml(u.name)}</td>
+          <td data-label="Email">${escapeHtml(u.email)}</td>
+          <td data-label="Phone">${escapeHtml(u.phone)}</td>
+          <td data-label="Wallet" style="flex-direction:row; align-items:center; flex-wrap:wrap;">
+            Tk${Number(u.walletBalance || 0).toLocaleString('en-US')}
+            <button type="button" class="icon-btn edit-balance-btn" data-uid="${u.id}" data-name="${escapeHtml(u.name || u.email || '')}" data-balance="${Number(u.walletBalance || 0)}" title="Edit Balance" style="width:26px; height:26px; margin-left:6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+          </td>
+          <td data-label="Status / Role">
+            ${isBanned ? '<span class="status-pill" style="background:var(--coral);">Banned</span>' : ''}
+            ${isUserAdmin ? '<span class="status-pill" style="background:#7C3AED;">Admin</span>' : (isBanned ? '' : '<span class="status-pill" style="background:#94A3B8;">Active</span>')}
+          </td>
+          <td data-label="Joined">${dateStr}</td>
+          <td class="cell-actions">${isSelf
+            ? '<span style="color:var(--muted); font-size:0.8rem;">Your Account</span>'
+            : `<div class="row-actions" style="flex-wrap:wrap; gap:6px;">
+                <button type="button" class="btn-ghost toggle-admin-btn" data-uid="${u.id}" data-current="${isUserAdmin ? '1' : '0'}" style="padding:7px 10px; font-size:0.78rem;">${isUserAdmin ? 'Remove Admin' : 'Make Admin'}</button>
+                <button type="button" class="btn-ghost toggle-ban-btn" data-uid="${u.id}" data-current="${isBanned ? '1' : '0'}" style="padding:7px 10px; font-size:0.78rem; ${isBanned ? 'border-color:var(--ok); color:var(--ok);' : 'border-color:var(--danger); color:var(--danger);'}">${isBanned ? 'Unban' : 'Ban'}</button>
+                <button type="button" class="icon-btn delete-user-btn" data-uid="${u.id}" data-name="${escapeHtml(u.name || u.email || '')}" title="Delete" style="border-color:var(--danger); color:var(--danger);">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>`
+          }</td>
+        </tr>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('.toggle-admin-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const uid = btn.dataset.uid;
+        const makeAdmin = btn.dataset.current === '0';
+        const label = makeAdmin ? 'make this user an admin' : 'remove this user\'s admin access';
+        if(!confirm('Are you sure you want to ' + label + '?')) return;
+        btn.disabled = true;
+        try{
+          await updateDoc(doc(db, 'users', uid), { role: makeAdmin ? 'admin' : 'user' });
+          showToast('Updated');
+        }catch(err){
+          console.error('role toggle error:', err);
+          showToast('Update failed');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    wrap.querySelectorAll('.toggle-ban-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const uid = btn.dataset.uid;
+        const willBan = btn.dataset.current === '0';
+        const label = willBan
+          ? 'Are you sure you want to ban this user? Once banned, they will be automatically logged out of the site and won\'t be able to log in again.'
+          : 'Are you sure you want to unban this user?';
+        if(!confirm(label)) return;
+        btn.disabled = true;
+        try{
+          await updateDoc(doc(db, 'users', uid), { banned: willBan });
+          showToast(willBan ? 'User banned' : 'Ban lifted');
+        }catch(err){
+          console.error('ban toggle error:', err);
+          showToast('Update failed');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    wrap.querySelectorAll('.delete-user-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const uid = btn.dataset.uid;
+        const name = btn.dataset.name;
+        // Deleting the Firestore doc only removes their profile/wallet data —
+        // this project has no Cloud Functions/Admin SDK wired up, so the
+        // underlying Firebase Auth account can't be deleted from the client.
+        // If they log in again afterwards a fresh (empty) profile gets created.
+        // Banning is the reliable way to actually block access.
+        if(!confirm(`Delete "${name}"?\n\nNote: this only deletes the user's profile/wallet data — it does not delete their login account, so they could log in again and open a new profile. To permanently block access, use "Ban" instead.`)) return;
+        btn.disabled = true;
+        try{
+          await deleteDoc(doc(db, 'users', uid));
+          showToast('User deleted');
+        }catch(err){
+          console.error('user delete error:', err);
+          showToast('Delete failed');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    wrap.querySelectorAll('.edit-balance-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.getElementById('userBalanceForm').dataset.uid = btn.dataset.uid;
+        document.getElementById('userBalanceUserLabel').textContent = 'User: ' + btn.dataset.name;
+        document.getElementById('userBalanceInput').value = btn.dataset.balance;
+        document.getElementById('userBalanceMsg').textContent = '';
+        document.getElementById('userBalanceMsg').className = 'msg';
+        document.getElementById('userBalanceOverlay').classList.add('open');
+      });
+    });
+  }
+  document.getElementById('userSearchInput').addEventListener('input', (e)=>{
+    userSearchTerm = e.target.value;
+    renderUsers();
+  });
+
+  /* ---------- User wallet balance edit modal ---------- */
+  document.getElementById('userBalanceCancelBtn').addEventListener('click', ()=>{
+    document.getElementById('userBalanceOverlay').classList.remove('open');
+  });
+  document.getElementById('userBalanceOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'userBalanceOverlay') document.getElementById('userBalanceOverlay').classList.remove('open');
+  });
+  document.getElementById('userBalanceForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const form = e.target;
+    const uid = form.dataset.uid;
+    const newBalance = Number(document.getElementById('userBalanceInput').value);
+    const msg = document.getElementById('userBalanceMsg');
+    if(!(newBalance >= 0)){
+      msg.className = 'msg err';
+      msg.textContent = 'Please enter a valid amount.';
+      return;
+    }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try{
+      await updateDoc(doc(db, 'users', uid), { walletBalance: newBalance });
+      document.getElementById('userBalanceOverlay').classList.remove('open');
+      showToast('Balance updated');
+    }catch(err){
+      console.error('balance edit error:', err);
+      msg.className = 'msg err';
+      msg.textContent = 'Update failed.';
+    }
+    submitBtn.disabled = false;
+  });
+
+  /* ---------- Settings (Firestore: settings/homepage + settings/announcement + settings/payment) ---------- */
+  async function loadHomepageSettings(){
+    try{
+      const snap = await getDoc(doc(db, 'settings', 'homepage'));
+      if(snap.exists()){
+        const data = snap.data();
+        document.getElementById('promoVideoIdInput').value = data.promoVideoId || '';
+        document.getElementById('tickerTextInput').value = data.tickerText || '';
+        document.getElementById('aboutTextInput').value = data.aboutText || '';
+      }
+      const annSnap = await getDoc(doc(db, 'settings', 'announcement'));
+      if(annSnap.exists()){
+        const a = annSnap.data();
+        document.getElementById('annTitle').value = a.title || '';
+        document.getElementById('annMessage').value = a.message || '';
+        document.getElementById('annActive').checked = !!a.active;
+      }
+      const paySnap = await getDoc(doc(db, 'settings', 'payment'));
+      if(paySnap.exists()){
+        const p = paySnap.data();
+        document.getElementById('bkashNumberInput').value = p.bkashNumber || '';
+        document.getElementById('nagadNumberInput').value = p.nagadNumber || '';
+        document.getElementById('rocketNumberInput').value = p.rocketNumber || '';
+      }
+      const socialSnap = await getDoc(doc(db, 'settings', 'social'));
+      if(socialSnap.exists()){
+        const s = socialSnap.data();
+        document.getElementById('socialFacebookInput').value = s.facebook || '';
+        document.getElementById('socialYoutubeInput').value = s.youtube || '';
+        document.getElementById('socialInstagramInput').value = s.instagram || '';
+        document.getElementById('socialWhatsappInput').value = s.whatsapp || '';
+      }
+    }catch(err){
+      console.error('loadHomepageSettings error:', err);
+    }
+  }
+
+  document.getElementById('paymentSettingsForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const bkashNumber = document.getElementById('bkashNumberInput').value.trim();
+    const nagadNumber = document.getElementById('nagadNumberInput').value.trim();
+    const rocketNumber = document.getElementById('rocketNumberInput').value.trim();
+    const msg = document.getElementById('paymentSettingsMsg');
+    try{
+      await setDoc(doc(db, 'settings', 'payment'), { bkashNumber, nagadNumber, rocketNumber }, { merge: true });
+      msg.textContent = 'Payment numbers saved.';
+      msg.className = 'msg ok';
+      showToast('Payment numbers updated');
+    }catch(err){
+      msg.textContent = 'Could not save — check Firestore rules.';
+      msg.className = 'msg err';
+      console.error('payment settings save error:', err);
+    }
+  });
+
+  document.getElementById('socialSettingsForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const facebook = document.getElementById('socialFacebookInput').value.trim();
+    const youtube = document.getElementById('socialYoutubeInput').value.trim();
+    const instagram = document.getElementById('socialInstagramInput').value.trim();
+    const whatsapp = document.getElementById('socialWhatsappInput').value.trim();
+    const msg = document.getElementById('socialSettingsMsg');
+    try{
+      await setDoc(doc(db, 'settings', 'social'), { facebook, youtube, instagram, whatsapp }, { merge: true });
+      msg.textContent = 'Social links saved.';
+      msg.className = 'msg ok';
+      showToast('Social links updated');
+    }catch(err){
+      msg.textContent = 'Could not save — check Firestore rules.';
+      msg.className = 'msg err';
+      console.error('social settings save error:', err);
+    }
+  });
+
+
+  document.getElementById('announcementForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const title = document.getElementById('annTitle').value.trim();
+    const message = document.getElementById('annMessage').value.trim();
+    const active = document.getElementById('annActive').checked;
+    const msg = document.getElementById('announcementMsg');
+    try{
+      await setDoc(doc(db, 'settings', 'announcement'), {
+        title, message, active, updatedAt: serverTimestamp()
+      }, { merge: true });
+      msg.textContent = 'Broadcast saved.';
+      msg.className = 'msg ok';
+      showToast('Broadcast updated');
+    }catch(err){
+      msg.textContent = 'Could not save.';
+      msg.className = 'msg err';
+      console.error('announcement save error:', err);
+    }
+  });
+
+  document.getElementById('settingsForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const videoInput = document.getElementById('promoVideoIdInput');
+    const videoVal = extractYouTubeId(videoInput.value);
+    videoInput.value = videoVal; // reflect the cleaned ID back in the field
+    const tickerVal = document.getElementById('tickerTextInput').value.trim();
+    const aboutVal = document.getElementById('aboutTextInput').value.trim();
+    const msg = document.getElementById('settingsMsg');
+    try{
+      await setDoc(doc(db, 'settings', 'homepage'), { promoVideoId: videoVal, tickerText: tickerVal, aboutText: aboutVal }, { merge: true });
+      msg.textContent = 'Saved.';
+      msg.className = 'msg ok';
+      showToast('Settings saved');
+    }catch(err){
+      msg.textContent = 'Could not save — check Firestore rules.';
+      msg.className = 'msg err';
+      console.error(err);
+    }
+  });
+
+  function esc(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  function renderTable(key){
+    const tbody = document.getElementById('tbody-'+key);
+    const items = cache[key];
+    const cols = SCHEMA[key].columns;
+    if(items.length === 0){
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="${cols.length+1}">No data yet — click "Add New" to get started.</td></tr>`;
+      return;
+    }
+    const labels = COLUMN_LABELS[key] || [];
+    tbody.innerHTML = items.map(item=>{
+      const tds = cols.map((c, i)=>{
+        let val = item[c];
+        if(key === 'games' && c === '__startPrice'){ val = 'Tk' + gameStartPrice(item).toLocaleString('en-US'); }
+        else if(key === 'games' && c === '__planCount'){ const cnt = gameTiers.filter(t => Number(item[t.key] || 0) > 0).length; val = cnt ? cnt + '' : '—'; }
+        else if(c === 'price' || c === 'oldPrice' || c === 'price1' || c === 'price5' || c === 'price10') val = val != null ? 'Tk' + Number(val).toLocaleString('en-US') : '—';
+        else if(key === 'videopacks' && c === 'stock'){ const st = packStock(item); val = `${st.free} left / ${st.total} total` + (st.legacy ? ' \u00b7 legacy system' : ''); }
+        else if(key === 'notices' && c === 'videoId'){ val = item.videoId ? '\u25b6 Video' : '—'; }
+        else if(key === 'products' && c === 'productType'){ const physical = item.productType ? item.productType === 'physical' : !item.downloadUrl; val = physical ? 'Physical' : 'Digital'; }
+        else if(key === 'products' && c === 'stock'){ const physical = item.productType ? item.productType === 'physical' : !item.downloadUrl; val = !physical ? '—' : (typeof item.stock === 'number' ? (item.stock > 0 ? item.stock + '' : 'Out of stock') : 'Unlimited'); }
+        else if(Array.isArray(val)) val = val.length ? `${val.length} (sold: ${Number(item.assignedCount || 0)})` : '—';
+        else val = (val === 0 ? '0' : (val || '—'));
+        const label = labels[i] ? ` data-label="${esc(labels[i])}"` : '';
+        return `<td${label}>${esc(val)}</td>`;
+      }).join('');
+      return `
+        <tr>
+          ${tds}
+          <td class="cell-actions">
+            <div class="row-actions">
+              ${key === 'videopacks' ? `<button type="button" class="btn-ghost small" data-vp-manage="${item.id}">Manage Videos</button>` : ''}
+              <button class="icon-btn" data-edit="${key}" data-id="${item.id}" title="Edit">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="icon-btn" data-del="${key}" data-id="${item.id}" title="Delete">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const item = cache[btn.dataset.edit].find(i=>i.id===btn.dataset.id);
+        openModal(btn.dataset.edit, item);
+      });
+    });
+    tbody.querySelectorAll('[data-vp-manage]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openVideoManager(btn.dataset.vpManage));
+    });
+    tbody.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=> handleDelete(btn.dataset.del, btn.dataset.id));
+    });
+  }
+
+  /* ---------- Add buttons ---------- */
+  document.querySelectorAll('[data-add]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openModal(btn.dataset.add, null));
+  });
+
+  /* ---------- Modal form ---------- */
+  const overlay = document.getElementById('overlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const itemForm = document.getElementById('itemForm');
+
+  function openModal(collKey, item){
+    modalTitle.textContent = (item ? 'Edit — ' : 'Add New — ') +
+      ({categories:'Category', courses:'Course', products:'Product', games:'Game', videopacks:'Video Pack', testimonials:'Review', notices:'Notice'})[collKey];
+    const fields = fieldsFor(collKey);
+    itemForm.innerHTML = fields.map(f=>{
+      let val;
+      if(f.type === 'list'){
+        val = item && Array.isArray(item[f.key]) ? esc(item[f.key].join('\n')) : '';
+        return `<div class="field"><label>${f.label}${f.required?' *':''}</label><textarea rows="${f.rows || 4}" data-key="${f.key}" data-type="list" ${f.required?'required':''}>${val}</textarea></div>`;
+      }
+      if(f.type === 'file'){
+        const existing = item ? (item[f.key] || '') : '';
+        const note = existing
+          ? `Current file: <a href="${esc(existing)}" target="_blank" style="color:var(--coral);">View</a> — the old file stays if you don't choose a new one.`
+          : 'Choose an .html game file.';
+        return `<div class="field"><label>${f.label}${f.required && !existing?' *':''}</label><input type="file" accept=".html,.htm,text/html" data-key="${f.key}" data-type="file"><p style="color:var(--muted); font-size:0.78rem; margin-top:6px;">${note}</p></div>`;
+      }
+      val = item ? esc(item[f.key] ?? '') : '';
+      if(f.type === 'textarea'){
+        const style = f.mono ? ' style="font-family:monospace; font-size:0.8rem;"' : '';
+        return `<div class="field"><label>${f.label}${f.required?' *':''}</label><textarea rows="${f.rows || 3}"${style} data-key="${f.key}" ${f.required?'required':''}>${val}</textarea></div>`;
+      }
+      if(f.type === 'select'){
+        // legacy products with no productType: Digital if there's a download link, else Physical
+        const current = item ? (item[f.key] || (f.key === 'productType' && item.downloadUrl ? 'digital' : '')) : '';
+        const opts = f.options.map(([v, l]) => `<option value="${esc(v)}" ${v === current ? 'selected' : ''}>${esc(l)}</option>`).join('');
+        return `<div class="field"><label>${f.label}</label><select data-key="${f.key}">${opts}</select></div>`;
+      }
+      if(f.type === 'category'){
+        const current = item ? (item[f.key] || '') : '';
+        const names = cache.categories.map(c => c.name).filter(Boolean);
+        if(current && !names.includes(current)) names.unshift(current); // keep an old value visible even if it was deleted from the category list
+        const options = ['<option value="">\u2014 Select \u2014</option>']
+          .concat(names.map(n => `<option value="${esc(n)}" ${n === current ? 'selected' : ''}>${esc(n)}</option>`))
+          .join('');
+        return `<div class="field"><label>${f.label}${f.required?' *':''}</label><select data-key="${f.key}" ${f.required?'required':''}>${options}</select></div>`;
+      }
+      return `<div class="field"><label>${f.label}${f.required?' *':''}</label><input type="${f.type}" data-key="${f.key}" value="${val}" ${f.required?'required':''}></div>`;
+    }).join('') + `
+      <div class="msg" id="formMsg"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    `;
+    itemForm.dataset.coll = collKey;
+    itemForm.dataset.id = item ? item.id : '';
+    overlay.classList.add('open');
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  }
+
+  function closeModal(){
+    overlay.classList.remove('open');
+    itemForm.innerHTML = '';
+  }
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeModal(); });
+
+  itemForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const collKey = itemForm.dataset.coll;
+    const id = itemForm.dataset.id;
+    const fields = fieldsFor(collKey);
+    const existingItem = id ? cache[collKey].find(i => i.id === id) : null;
+    const data = {};
+    const formMsg = document.getElementById('formMsg');
+    const saveBtn = itemForm.querySelector('button[type="submit"]');
+    if(saveBtn) saveBtn.disabled = true;
+    try{
+      for(const f of fields){
+        const input = itemForm.querySelector(`[data-key="${f.key}"]`);
+        if(f.type === 'file'){
+          const file = input.files && input.files[0];
+          if(file){
+            formMsg.textContent = 'Uploading game file...';
+            formMsg.className = 'msg';
+            const fileRef = storageRef(storage, `games/${Date.now()}_${file.name}`);
+            await uploadBytes(fileRef, file);
+            data[f.key] = await getDownloadURL(fileRef);
+          } else if(existingItem && existingItem[f.key]){
+            data[f.key] = existingItem[f.key];
+          } else if(f.required){
+            throw new Error('file-required');
+          }
+          continue;
+        }
+        let val = input.value.trim();
+        if(f.key === 'videoId') val = extractYouTubeId(val);
+        if(f.type === 'number') val = val === '' ? null : Number(val);
+        if(f.type === 'list'){
+          const arr = val.split('\n').map(s=>s.trim()).filter(Boolean);
+          if(arr.length) data[f.key] = arr;
+          continue;
+        }
+        if(val !== '' && val !== null) data[f.key] = val;
+      }
+      formMsg.textContent = 'Saving...';
+      formMsg.className = 'msg';
+      if(id){
+        await updateDoc(doc(db, collKey, id), data);
+        showToast('Updated');
+      } else {
+        if(collKey === 'videopacks'){ data.system = 'v2'; data.totalCount = 0; data.assignedCount = 0; }
+        await addDoc(collection(db, collKey), data);
+        showToast(collKey === 'videopacks' ? 'Pack created — now add links from "Manage Videos"' : 'Added');
+      }
+      closeModal();
+    }catch(err){
+      formMsg.textContent = err.message === 'file-required'
+        ? 'Choose an HTML game file.'
+        : 'Could not save — check Firestore/Storage rules.';
+      formMsg.className = 'msg err';
+      console.error(err);
+    }finally{
+      if(saveBtn) saveBtn.disabled = false;
+    }
+  });
+
+  async function handleDelete(collKey, id){
+    if(collKey === 'videopacks') return deleteVideoPack(id);
+    if(!confirm('Are you sure you want to delete this?')) return;
+    try{
+      await deleteDoc(doc(db, collKey, id));
+      showToast('Deleted');
+    }catch(err){
+      alert('Could not delete — check Firestore rules.');
+      console.error(err);
+    }
+  }
+
+  /* ================= Video Stock Manager =================
+     Each video link is its own document (collection: videoStock).
+     Document ID = the Google Drive file ID (or a hash of the link), so the
+     same link can't be added twice. On purchase, a video moves from
+     "available" to "assigned" inside a transaction — so the same video
+     can never go to two people. */
+  const STOCK = 'videoStock';
+
+  function cyrb53(str){
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for(let i = 0, ch; i < str.length; i++){
+      ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+
+  function stockKeyOf(url){
+    const s = String(url).trim();
+    const m = s.match(/\/(?:file\/)?d\/([A-Za-z0-9_-]{10,})/) ||
+              s.match(/\/folders\/([A-Za-z0-9_-]{10,})/) ||
+              s.match(/[?&]id=([A-Za-z0-9_-]{10,})/);
+    if(m) return 'd_' + m[1];
+    return 'u_' + cyrb53(s.toLowerCase().replace(/#.*$/, '').replace(/\/+$/, ''));
+  }
+
+  function parseVideoLines(text){
+    const entries = [], invalid = [];
+    String(text || '').split(/\r?\n/).forEach(raw=>{
+      const line = raw.trim();
+      if(!line) return;
+      const m = line.match(/https?:\/\/[^\s|]+/i);
+      if(!m){ invalid.push(line); return; }
+      const url = m[0].replace(/[),.;]+$/, '');
+      let title = line.slice(0, m.index).replace(/[\s|,:\-–—]+$/, '').trim();
+      if(!title) title = line.slice(m.index + m[0].length).replace(/^[\s|,:\-–—]+/, '').trim();
+      entries.push({ url, title, key: stockKeyOf(url) });
+    });
+    return { entries, invalid };
+  }
+
+  function safeHref(url){
+    return /^https?:\/\//i.test(String(url || '')) ? String(url) : '#';
+  }
+
+  function packStock(item){
+    if(item.system === 'v2'){
+      const t = Number(item.totalCount || 0), a = Number(item.assignedCount || 0);
+      return { total: t, sold: a, free: Math.max(0, t - a), legacy: false };
+    }
+    const t = Array.isArray(item.links) ? item.links.length : 0, a = Number(item.assignedCount || 0);
+    return { total: t, sold: a, free: Math.max(0, t - a), legacy: true };
+  }
+
+  async function loadStockDocs(packId){
+    const snap = await getDocs(query(collection(db, STOCK), where('packId', '==', packId)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  /* Add new videos. Any that already exist (in this pack or another,
+     sold ones included) are skipped — never overwritten. */
+  async function addStockEntries(pack, entries){
+    const dupes = [], createdEntries = [];
+    const seen = new Set(), uniq = [];
+    for(const e of entries){
+      if(seen.has(e.key)){ dupes.push({ url: e.url, reason: 'duplicate within this list' }); continue; }
+      seen.add(e.key);
+      uniq.push(e);
+    }
+    for(let i = 0; i < uniq.length; i += 100){
+      const chunk = uniq.slice(i, i + 100);
+      const res = await runTransaction(db, async (tx)=>{
+        const snaps = await Promise.all(chunk.map(e => tx.get(doc(db, STOCK, e.key))));
+        const made = [], skipped = [];
+        chunk.forEach((e, idx)=>{
+          const s = snaps[idx];
+          if(s.exists()){
+            const x = s.data();
+            skipped.push({ url: e.url, reason: x.status === 'assigned' ? 'already sold'
+              : (x.packId === pack.id ? 'already in this pack' : 'already in another pack') });
+            return;
+          }
+          const data = {
+            packId: pack.id, url: e.url, title: e.title || '',
+            status: e.assigned ? 'assigned' : 'available', createdAt: serverTimestamp()
+          };
+          if(e.assigned){ data.legacy = true; data.assignedAt = serverTimestamp(); }
+          tx.set(doc(db, STOCK, e.key), data);
+          made.push(e);
+        });
+        return { made, skipped };
+      });
+      createdEntries.push(...res.made);
+      dupes.push(...res.skipped);
+    }
+    return { createdEntries, dupes };
+  }
+
+  async function migrateLegacyPack(pack){
+    const links = (Array.isArray(pack.links) ? pack.links : []).map(s => String(s).trim()).filter(Boolean);
+    const assignedN = Number(pack.assignedCount || 0);
+    const entries = links.map((url, i)=>({ url, title: '', key: stockKeyOf(url), assigned: i < assignedN }));
+    await addStockEntries(pack, entries);
+    // mark as "sold" any that were sold during the migration window too
+    const fresh = await getDoc(doc(db, 'videopacks', pack.id));
+    const freshAssigned = Number((fresh.data() || {}).assignedCount || 0);
+    if(freshAssigned > assignedN){
+      for(const url of links.slice(assignedN, freshAssigned)){
+        try{ await updateDoc(doc(db, STOCK, stockKeyOf(url)), { status: 'assigned', legacy: true, assignedAt: serverTimestamp() }); }
+        catch(e){ console.warn('late-sale mark failed', e); }
+      }
+    }
+    const docs = await loadStockDocs(pack.id);
+    const sold = docs.filter(d => d.status === 'assigned').length;
+    await updateDoc(doc(db, 'videopacks', pack.id), { system: 'v2', totalCount: docs.length, assignedCount: sold, links: deleteField() });
+    return docs;
+  }
+
+  /* ---------- Manager UI ---------- */
+  const vpOverlay = document.getElementById('vpOverlay');
+  let vp = null;
+
+  function vpPack(){ return vp ? cache.videopacks.find(p => p.id === vp.packId) : null; }
+
+  function vpFiltered(){
+    const q = vp.q.trim().toLowerCase();
+    return vp.docs.filter(d=>{
+      if(vp.filter === 'available' && d.status !== 'available') return false;
+      if(vp.filter === 'assigned' && d.status !== 'assigned') return false;
+      if(!q) return true;
+      return (d.title || '').toLowerCase().includes(q) || (d.url || '').toLowerCase().includes(q) ||
+             (d.buyerEmail || '').toLowerCase().includes(q) || (d.orderId || '').toLowerCase().includes(q);
+    });
+  }
+
+  function vpStatsRender(){
+    const pack = vpPack();
+    let total, sold;
+    if(pack && pack.system !== 'v2'){ const s = packStock(pack); total = s.total; sold = s.sold; }
+    else { total = vp.docs.length; sold = vp.docs.filter(d => d.status === 'assigned').length; }
+    document.getElementById('vpStatTotal').textContent = total;
+    document.getElementById('vpStatFree').textContent = Math.max(0, total - sold);
+    document.getElementById('vpStatSold').textContent = sold;
+  }
+
+  function vpListRender(){
+    const list = document.getElementById('vpList');
+    const moreBtn = document.getElementById('vpMoreBtn');
+    if(vp.loading){ list.innerHTML = '<p style="color:var(--muted); text-align:center; padding:24px 0;">Loading...</p>'; moreBtn.style.display = 'none'; return; }
+    const rows = vpFiltered();
+    if(rows.length === 0){
+      list.innerHTML = '<p style="color:var(--muted); text-align:center; padding:24px 0;">No videos found.</p>';
+      moreBtn.style.display = 'none';
+      return;
+    }
+    const ts = d => (d.createdAt && d.createdAt.seconds) ? d.createdAt.seconds : ((d.createdAtMs || 0) / 1000);
+    rows.sort((a, b) => ts(b) - ts(a));
+    const shown = rows.slice(0, vp.shown);
+    list.innerHTML = shown.map((d, i)=>{
+      const sold = d.status === 'assigned';
+      const pill = sold
+        ? '<span class="status-pill" style="background:#9CA3AF;">Sold</span>'
+        : '<span class="status-pill" style="background:var(--ok);">Available</span>';
+      const who = sold
+        ? (d.legacy ? 'Sold under the legacy system' : `${d.buyerEmail || d.uid || ''}${d.orderId ? ' \u00b7 Order #' + String(d.orderId).slice(0, 6) : ''}`)
+        : '';
+      const label = d.title || String(d.url || '').replace(/^https?:\/\//i, '');
+      return `
+        <div class="vp-row">
+          <span class="vp-num">${rows.length - i}</span>
+          <div class="vp-main">
+            <div class="vp-title">${esc(label)}</div>
+            <div class="vp-sub"><a href="${esc(safeHref(d.url))}" target="_blank" rel="noopener">Open Link</a>${who ? ' \u00b7 ' + esc(who) : ''}</div>
+          </div>
+          ${pill}
+          ${sold ? '' : `<button type="button" class="icon-btn" data-vp-del="${esc(d.id)}" title="Remove">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>
+          </button>`}
+        </div>`;
+    }).join('');
+    moreBtn.style.display = rows.length > shown.length ? 'block' : 'none';
+    moreBtn.textContent = `Show More (${rows.length - shown.length} remaining)`;
+    list.querySelectorAll('[data-vp-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=> vpDeleteVideo(btn.dataset.vpDel));
+    });
+  }
+
+  function vpLegacyRender(){
+    const pack = vpPack();
+    const box = document.getElementById('vpLegacyBox');
+    const addBox = document.getElementById('vpAddBox');
+    const isLegacy = pack && pack.system !== 'v2' && Array.isArray(pack.links) && pack.links.length > 0;
+    if(!isLegacy){ box.innerHTML = ''; addBox.style.display = 'block'; return; }
+    const s = packStock(pack);
+    addBox.style.display = 'none';
+    box.innerHTML = `
+      <div class="vp-warn">
+        <b>This pack has ${s.total} links under the legacy system</b> (${s.sold} sold).
+        Migrating to the new system makes each video its own record — one that's already sold will never go to anyone else,
+        and any duplicate links will be dropped. You can add new links once it's migrated.
+        <button type="button" class="btn" id="vpMigrateBtn" style="margin-top:10px;">Migrate to New System</button>
+        <div class="msg" id="vpMigrateMsg"></div>
+      </div>`;
+    document.getElementById('vpMigrateBtn').addEventListener('click', vpMigrate);
+  }
+
+  async function vpMigrate(){
+    const pack = vpPack();
+    if(!pack) return;
+    if(!confirm('The old links will be migrated to the new system. This is a one-time action. Continue?')) return;
+    const btn = document.getElementById('vpMigrateBtn');
+    const msg = document.getElementById('vpMigrateMsg');
+    btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Migrating... please wait';
+    try{
+      vp.docs = await migrateLegacyPack(pack);
+      vp.loading = false;
+      showToast('Migrated to the new system');
+      vpLegacyRender(); vpStatsRender(); vpListRender();
+    }catch(err){
+      console.error('migrate error:', err);
+      msg.className = 'msg err';
+      msg.textContent = 'Failed — check that videoStock has been added to Firestore rules, then try again.';
+      btn.disabled = false;
+    }
+  }
+
+  async function vpAdd(){
+    const pack = vpPack();
+    if(!pack) return;
+    const input = document.getElementById('vpLinksInput');
+    const msg = document.getElementById('vpAddMsg');
+    const dupBox = document.getElementById('vpDupes');
+    const btn = document.getElementById('vpAddBtn');
+    const { entries, invalid } = parseVideoLines(input.value);
+    dupBox.style.display = 'none'; dupBox.innerHTML = '';
+    if(entries.length === 0){
+      msg.className = 'msg err';
+      msg.textContent = invalid.length ? 'No valid links found (a link must start with http or https).' : 'Paste a link first.';
+      return;
+    }
+    btn.disabled = true; msg.className = 'msg'; msg.textContent = `Adding ${entries.length} links...`;
+    try{
+      const { createdEntries, dupes } = await addStockEntries(pack, entries);
+      if(createdEntries.length){
+        await updateDoc(doc(db, 'videopacks', pack.id), { system: 'v2', totalCount: increment(createdEntries.length) });
+        createdEntries.forEach(e => vp.docs.push({ id: e.key, packId: pack.id, url: e.url, title: e.title || '', status: 'available', createdAtMs: Date.now() }));
+      }
+      const parts = [`${createdEntries.length} added`];
+      if(dupes.length) parts.push(`${dupes.length} skipped (already exists)`);
+      if(invalid.length) parts.push(`${invalid.length} line(s) not a link`);
+      msg.className = createdEntries.length ? 'msg ok' : 'msg err';
+      msg.textContent = parts.join(' · ');
+      const problems = dupes.map(d => `${d.reason}: ${d.url}`).concat(invalid.map(l => `not a link: ${l}`));
+      if(problems.length){
+        dupBox.style.display = 'block';
+        dupBox.innerHTML = problems.map(p => `<div style="word-break:break-all; margin-bottom:4px;">${esc(p)}</div>`).join('');
+      }
+      // keep only the ones that weren't added in the box, so they can be fixed and resubmitted
+      input.value = '';
+      vpStatsRender(); vpListRender();
+    }catch(err){
+      console.error('add stock error:', err);
+      msg.className = 'msg err';
+      msg.textContent = 'Could not add — check that videoStock has been added to Firestore rules.';
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  async function vpDeleteVideo(stockId){
+    if(!confirm('Remove this video from stock?')) return;
+    const pack = vpPack();
+    try{
+      await runTransaction(db, async (tx)=>{
+        const ref = doc(db, STOCK, stockId);
+        const snap = await tx.get(ref);
+        if(!snap.exists()) return;
+        if(snap.data().status !== 'available') throw new Error('already-sold');
+        tx.delete(ref);
+        tx.update(doc(db, 'videopacks', pack.id), { totalCount: increment(-1) });
+      });
+      vp.docs = vp.docs.filter(d => d.id !== stockId);
+      vpStatsRender(); vpListRender();
+      showToast('Removed from stock');
+    }catch(err){
+      console.error('delete stock error:', err);
+      showToast(err.message === 'already-sold' ? 'This was just sold — it can\'t be removed' : 'Could not remove');
+    }
+  }
+
+  async function openVideoManager(packId){
+    const pack = cache.videopacks.find(p => p.id === packId);
+    if(!pack) return;
+    vp = { packId, docs: [], filter: 'all', q: '', shown: 50, loading: true };
+    document.getElementById('vpTitle').textContent = 'Manage Videos — ' + (pack.title || '');
+    document.getElementById('vpBody').innerHTML = `
+      <div class="vp-stats">
+        <div class="vp-stat"><strong id="vpStatTotal">…</strong><span>Total Videos</span></div>
+        <div class="vp-stat"><strong id="vpStatFree" style="color:var(--ok);">…</strong><span>Available</span></div>
+        <div class="vp-stat"><strong id="vpStatSold">…</strong><span>Sold</span></div>
+      </div>
+      <div id="vpLegacyBox"></div>
+      <div class="vp-box" id="vpAddBox">
+        <h4>Add New Video Links</h4>
+        <p style="color:var(--muted); font-size:0.78rem; margin-bottom:8px; line-height:1.6;">
+          One link per line. You can optionally include a name: <b>Video Name | Link</b>.
+          The same link won't be added twice, and one already sold will never be given out again.
+        </p>
+        <div class="field" style="margin-bottom:0;"><textarea id="vpLinksInput" rows="6" placeholder="https://drive.google.com/file/d/…&#10;Video Name | https://drive.google.com/file/d/…"></textarea></div>
+        <button type="button" class="btn" id="vpAddBtn" style="margin-top:10px;">Add</button>
+        <div class="msg" id="vpAddMsg"></div>
+        <div class="vp-dupes" id="vpDupes" style="display:none;"></div>
+      </div>
+      <div class="vp-toolbar">
+        <select id="vpFilter">
+          <option value="all">All Videos</option>
+          <option value="available">Available</option>
+          <option value="assigned">Sold</option>
+        </select>
+        <input type="search" id="vpSearch" placeholder="Search name / link / email">
+      </div>
+      <div id="vpList"></div>
+      <button type="button" class="btn-ghost" id="vpMoreBtn" style="display:none; width:100%; margin-top:10px;">Show More</button>
+    `;
+    document.getElementById('vpAddBtn').addEventListener('click', vpAdd);
+    document.getElementById('vpFilter').addEventListener('change', e => { vp.filter = e.target.value; vp.shown = 50; vpListRender(); });
+    document.getElementById('vpSearch').addEventListener('input', e => { vp.q = e.target.value; vp.shown = 50; vpListRender(); });
+    document.getElementById('vpMoreBtn').addEventListener('click', ()=>{ vp.shown += 50; vpListRender(); });
+    vpOverlay.classList.add('open');
+    vpLegacyRender(); vpStatsRender(); vpListRender();
+    try{
+      vp.docs = await loadStockDocs(packId);
+      vp.loading = false;
+      // verify the counters are correct (new-system packs only)
+      const p = vpPack();
+      if(p && p.system === 'v2'){
+        const sold = vp.docs.filter(d => d.status === 'assigned').length;
+        if(Number(p.totalCount || 0) !== vp.docs.length || Number(p.assignedCount || 0) !== sold){
+          updateDoc(doc(db, 'videopacks', packId), { totalCount: vp.docs.length, assignedCount: sold }).catch(()=>{});
+        }
+      }
+      vpStatsRender(); vpListRender();
+    }catch(err){
+      console.error('load stock error:', err);
+      vp.loading = false;
+      document.getElementById('vpList').innerHTML = '<p style="color:var(--coral); text-align:center; padding:24px 0;">Could not load — check that videoStock has been added to Firestore rules.</p>';
+    }
+  }
+
+  function closeVideoManager(){ vpOverlay.classList.remove('open'); vp = null; }
+  document.getElementById('vpCloseBtn').addEventListener('click', closeVideoManager);
+  vpOverlay.addEventListener('click', (e)=>{ if(e.target === vpOverlay) closeVideoManager(); });
+
+  /* Delete the whole pack — its video records are removed too */
+  async function deleteVideoPack(id){
+    let docs = [];
+    try{ docs = await loadStockDocs(id); }catch(e){ console.warn('stock load failed', e); }
+    const sold = docs.filter(d => d.status === 'assigned').length;
+    let text = 'Delete this video pack?';
+    if(docs.length) text += `\nIts ${docs.length} video record(s) will also be deleted.`;
+    if(sold) text += `\n${sold} already sold — the link stays in the buyers' orders, but if the sale record is deleted, re-adding that link could let it be sold again.`;
+    if(!confirm(text)) return;
+    try{
+      for(let i = 0; i < docs.length; i += 400){
+        const batch = writeBatch(db);
+        docs.slice(i, i + 400).forEach(d => batch.delete(doc(db, STOCK, d.id)));
+        await batch.commit();
+      }
+      await deleteDoc(doc(db, 'videopacks', id));
+      showToast('Deleted');
+    }catch(err){
+      alert('Could not delete — check Firestore rules.');
+      console.error(err);
+    }
+  }
+
+  /* ---------- Toast ---------- */
+  let toastTimer;
+  function showToast(text){
+    const toast = document.getElementById('toast');
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toast.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>
